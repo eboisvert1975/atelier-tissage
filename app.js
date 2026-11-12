@@ -189,8 +189,8 @@ render();
 
 /* SESSION 4 — Dimensions personnalisées du patron */
 
-const MAX_ENDS = 200;
-const MAX_PICKS = 200;
+const MAX_ENDS = 580;
+const MAX_PICKS = 580;
 
 function repeatToLength(values, count, fallback) {
   const source = values.length ? values : [fallback];
@@ -217,7 +217,7 @@ function applyDimensions() {
     picks > MAX_PICKS
   ) {
     notify(
-      'Choisis entre 1 et 200 fils et entre 1 et 200 duites.'
+      'Choisis entre 1 et 580 fils et entre 1 et 580 duites.'
     );
     return;
   }
