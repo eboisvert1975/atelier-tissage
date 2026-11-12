@@ -90,3 +90,77 @@ render=function(){originalRender();renderOverview()};
 
 try{const saved=localStorage.getItem(STORAGE_KEY);if(saved)draft=normalizeDraft(JSON.parse(saved))}catch(e){notify('Sauvegarde précédente invalide; un nouveau patron est chargé.')}
 render();
+
+
+
+/* SESSION 4 — Dimensions personnalisées du patron */
+
+const MAX_ENDS = 200;
+const MAX_PICKS = 200;
+
+function repeatToLength(values, count, fallback) {
+  const source = values.length ? values : [fallback];
+
+  return Array.from(
+    { length: count },
+    (_, i) => {
+      const value = source[i % source.length];
+      return Array.isArray(value) ? [...value] : value;
+    }
+  );
+}
+
+function applyDimensions() {
+  const ends = Number($('endCountInput').value);
+  const picks = Number($('pickCountInput').value);
+
+  if (
+    !Number.isInteger(ends) ||
+    !Number.isInteger(picks) ||
+    ends < 1 ||
+    picks < 1 ||
+    ends > MAX_ENDS ||
+    picks > MAX_PICKS
+  ) {
+    notify(
+      'Choisis entre 1 et 200 fils et entre 1 et 200 duites.'
+    );
+    return;
+  }
+
+  draft.threading = repeatToLength(
+    draft.threading,
+    ends,
+    0
+  );
+
+  draft.warpColors = repeatToLength(
+    draft.warpColors,
+    ends,
+    0
+  );
+
+  draft.treadling = repeatToLength(
+    draft.treadling,
+    picks,
+    Array(draft.pedals).fill(false)
+  );
+
+  draft.weftColors = repeatToLength(
+    draft.weftColors,
+    picks,
+    0
+  );
+
+  changed(
+    `Patron redimensionné : ${ends} fils × ${picks} duites.`
+  );
+}
+
+$('applyDimensions').addEventListener(
+  'click',
+  applyDimensions
+);
+
+$('endCountInput').value = draft.threading.length;
+$('pickCountInput').value = draft.treadling.length;
