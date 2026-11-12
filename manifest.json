@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "Atelier de tissage",
+  "short_name": "Atelier",
+  "description": "Création et gestion de patrons de tissage",
+  "lang": "fr-CA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f3ef",
+  "theme_color": "#29483c"
+}
