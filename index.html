@@ -1,32 +1,222 @@
-ATELIER DE TISSAGE
-Nouveau patron
-Enregistrer
-Configuration du métier
-Cadres4 cadres8 cadres Pédales4681012 MécanismeÀ la baisseÀ la lève
-Nom du patronMon premier patron
-Dessin Passage Attachage Marchure Couleurs
-Dessin du tissu
-Chaîne visible lorsque la case prend la couleur du fil; trame visible lorsqu'elle prend la couleur de la duite.
 
-Exemple chaîneExemple trame
-Passage en lisses
-− Fil+ Fil
-Choisis le cadre de chaque fil de chaîne.
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#29483c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Atelier">
+  <title>Atelier de tissage</title>
 
-Attachage
-Active les liaisons entre chaque cadre et chaque pédale.
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+</head>
 
-Marchure
-− D uite+ D uite
-Une duite peut actionner une ou plusieurs pédales.
+<body>
+  <header class="topbar">
+    <div>
+      <small>ATELIER DE TISSAGE</small>
+      <h1 id="draftName">Nouveau patron</h1>
+    </div>
+    <button id="saveButton" type="button">
+      Enregistrer
+    </button>
+  </header>
 
-Couleurs du patron
-Attribue une couleur à chaque fil de chaîne et à chaque duite.
-Chaîne
+  <main>
+    <section class="settings panel">
+      <h2>Configuration du métier</h2>
 
-Trame
+      <div class="settings-grid">
+        <label>
+          Cadres
+          <select id="shafts">
+            <option value="4">4 cadres</option>
+            <option value="8">8 cadres</option>
+          </select>
+        </label>
 
-Fichier du patron
-Exporter JSONImporter JSON
-Patron prêt.
-La sauvegarde automatique est conservée dans le navigateur de cet appareil. Exporte régulièrement tes patrons JSON pour en garder une copie.
+        <label>
+          Pédales
+          <select id="pedals">
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+          </select>
+        </label>
+
+        <label>
+          Mécanisme
+          <select id="mode">
+            <option value="sinking">À la baisse</option>
+            <option value="rising">À la lève</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="name-label">
+        Nom du patron
+        <input id="nameInput"
+               type="text"
+               value="Mon premier patron">
+      </label>
+    </section>
+
+    <nav class="tabs" aria-label="Sections du patron">
+      <button class="tab active" data-tab="drawdown">
+        Dessin
+      </button>
+      <button class="tab" data-tab="threading">
+        Passage
+      </button>
+      <button class="tab" data-tab="tieup">
+        Attachage
+      </button>
+      <button class="tab" data-tab="treadling">
+        Marchure
+      </button>
+      <button class="tab" data-tab="colors">
+        Couleurs
+      </button>
+    </nav>
+
+    <section id="drawdown" class="editor panel">
+      <div class="section-heading">
+        <h2>Dessin du tissu</h2>
+        <span id="dimensions"></span>
+      </div>
+
+      <p class="hint">
+        La couleur de chaque case correspond au fil visible
+        à l'intersection de la chaîne et de la trame.
+      </p>
+
+      <div class="grid-scroll">
+        <div id="drawdownGrid" class="weave-grid"></div>
+      </div>
+
+      <div class="legend">
+        <span>
+          <i class="swatch" style="background:#A94B3D"></i>
+          Exemple chaîne
+        </span>
+        <span>
+          <i class="swatch" style="background:#E9DFC9"></i>
+          Exemple trame
+        </span>
+      </div>
+    </section>
+
+    <section id="threading" class="editor panel hidden">
+      <div class="section-heading">
+        <h2>Passage en lisses</h2>
+        <div class="button-pair">
+          <button id="removeEnd" class="secondary">
+            − Fil
+          </button>
+          <button id="addEnd">+ Fil</button>
+        </div>
+      </div>
+
+      <p class="hint">
+        Choisis le cadre de chaque fil de chaîne.
+      </p>
+
+      <div id="threadingEditor"></div>
+    </section>
+
+    <section id="tieup" class="editor panel hidden">
+      <h2>Attachage</h2>
+
+      <p class="hint">
+        Active les liaisons entre chaque cadre et chaque pédale.
+      </p>
+
+      <div class="matrix-scroll">
+        <div id="tieupEditor"></div>
+      </div>
+    </section>
+
+    <section id="treadling" class="editor panel hidden">
+      <div class="section-heading">
+        <h2>Marchure</h2>
+        <div class="button-pair">
+          <button id="removePick" class="secondary">
+            − Duite
+          </button>
+          <button id="addPick">+ Duite</button>
+        </div>
+      </div>
+
+      <p class="hint">
+        Une duite peut actionner une ou plusieurs pédales.
+      </p>
+
+      <div class="matrix-scroll">
+        <div id="treadlingEditor"></div>
+      </div>
+    </section>
+
+    <section id="colors" class="editor panel hidden">
+      <h2>Couleurs du patron</h2>
+
+      <p class="hint">
+        Attribue une couleur à chaque fil de chaîne
+        et à chaque duite.
+      </p>
+
+      <h3>Chaîne</h3>
+      <div id="warpColorsEditor" class="color-list"></div>
+
+      <h3>Trame</h3>
+      <div id="weftColorsEditor" class="color-list"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Fichier du patron</h2>
+
+      <div class="actions">
+        <button id="exportJSON">
+          Exporter JSON
+        </button>
+
+        <button id="importButton" class="secondary">
+          Importer JSON
+        </button>
+
+        <input id="importFile"
+               type="file"
+               accept=".json,application/json"
+               hidden>
+      </div>
+
+      <p id="message" role="status">
+        Patron prêt.
+      </p>
+
+      <p class="hint">
+        La sauvegarde automatique est conservée
+        dans le navigateur de cet appareil.
+        Exporte régulièrement tes patrons JSON
+        pour en garder une copie.
+      </p>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js")
+          .catch(error => console.warn(
+            "Service worker non enregistré :", error
+          ));
+      });
+    }
+  </script>
+</body>
+</html>
