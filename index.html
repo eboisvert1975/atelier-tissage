@@ -53,6 +53,46 @@
       </label>
     </section>
 
+ 
+<section class="panel">
+  <h2>Dimensions du patron</h2>
+
+  <div class="settings-grid">
+    <label>
+      Nombre de fils de chaîne
+      <input
+        id="endCountInput"
+        type="number"
+        min="1"
+        max="2000"
+        step="1"
+        value="16">
+    </label>
+
+    <label>
+      Nombre de duites
+      <input
+        id="pickCountInput"
+        type="number"
+        min="1"
+        max="2000"
+        step="1"
+        value="8">
+    </label>
+  </div>
+
+  <p class="hint">
+    Les fils et les duites supplémentaires reprennent
+    le motif existant. Une réduction supprime les
+    éléments à la fin du patron.
+  </p>
+
+  <button id="applyDimensions" type="button">
+    Appliquer les dimensions
+  </button>
+</section>
+
+
     <nav class="tabs" aria-label="Espaces de travail">
       <button class="tab active" data-tab="overview">Vue complète</button>
       <button class="tab" data-tab="drawdown">Dessin</button>
