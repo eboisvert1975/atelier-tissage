@@ -258,3 +258,89 @@ $('applyDimensions').addEventListener(
 
 $('endCountInput').value = draft.threading.length;
 $('pickCountInput').value = draft.treadling.length;
+
+
+/* SESSION 5 — Calculs de tissage */
+
+function calculateWeaving() {
+  const read = id => Number($(id).value);
+
+  const epi = read('calcEpi');
+  const ppi = read('calcPpi');
+  const finishedLength = read('calcLength');
+  const shrink = read('calcShrink');
+  const takeup = read('calcTakeup');
+  const waste = read('calcWaste');
+
+  const values = [
+    epi, ppi, finishedLength,
+    shrink, takeup, waste
+  ];
+
+  const output = $('calculationResults');
+
+  if (
+    values.some(v => !Number.isFinite(v)) ||
+    ['calcEpi','calcPpi','calcLength',
+     'calcShrink','calcTakeup','calcWaste']
+      .some(id => $(id).value.trim() === '') ||
+    epi <= 0 || ppi <= 0 ||
+    finishedLength <= 0 ||
+    shrink < 0 || shrink >= 100 ||
+    takeup < 0 || waste < 0
+  ) {
+    output.textContent =
+      'Vérifie les valeurs des calculs.';
+    return;
+  }
+
+  const ends = draft.threading.length;
+
+  const width = ends / epi;
+  const loomLength =
+    finishedLength / (1 - shrink / 100);
+
+  const warpPerEnd =
+    loomLength * (1 + takeup / 100) + waste;
+
+  const picks = Math.ceil(loomLength * ppi);
+
+  const totalWarpYards =
+    ends * warpPerEnd / 36;
+
+  const minimumWeftYards =
+    picks * width / 36;
+
+  const format = (n, digits = 1) =>
+    n.toLocaleString('fr-CA', {
+      maximumFractionDigits: digits
+    });
+
+  output.replaceChildren();
+
+  const results = [
+    ['Fils de chaîne', format(ends, 0)],
+    ['Largeur au métier', format(width) + ' po'],
+    ['Longueur à ourdir par fil',
+      format(warpPerEnd) + ' po'],
+    ['Duites estimées', format(picks, 0)],
+    ['Chaîne totale',
+      format(totalWarpYards) + ' verges'],
+    ['Trame minimale',
+      format(minimumWeftYards) + ' verges']
+  ];
+
+  for (const [label, value] of results) {
+    const p = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = label + ' : ';
+    p.append(strong, document.createTextNode(value));
+    output.append(p);
+  }
+}
+
+$('calculateButton').addEventListener(
+  'click',
+  calculateWeaving
+);
+
