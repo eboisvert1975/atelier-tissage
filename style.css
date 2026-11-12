@@ -11,3 +11,29 @@
 .overview-part .ov-cell{background:white}
 .overview-title{font-size:12px;font-weight:700;margin:0 0 4px;color:#29483c}
 #zoomControl{width:105px;margin:4px 0 0}
+
+
+
+/* VERSION 4 — Dessin optimisé */
+
+.grid-scroll {
+  overflow: auto;
+  max-width: 100%;
+  max-height: 65vh;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #deded6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+#drawdownGrid {
+  display: block;
+  width: max-content;
+  min-width: 0;
+}
+
+#drawdownGrid canvas {
+  display: block;
+  max-width: none;
+  image-rendering: pixelated;
+}
