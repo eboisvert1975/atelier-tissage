@@ -45,5 +45,48 @@ $('saveButton').addEventListener('click',()=>saveLocal(true));
 $('exportJSON').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(draft,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=(draft.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')||'patron')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Fichier JSON exporté.')});
 $('importButton').addEventListener('click',()=>$('importFile').click());
 $('importFile').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{draft=normalizeDraft(JSON.parse(await file.text()));changed('Patron importé et sauvegardé.')}catch(error){notify('Importation impossible : '+error.message)}finally{e.target.value=''}});
+
+// Vue quadrillée complète : même modèle de données que les autres onglets.
+let overviewCellSize=24;
+function makeOverviewGrid(parent, rows, cols, cellFn, title){
+  const section=document.createElement('div');
+  const heading=document.createElement('p');heading.className='overview-title';heading.textContent=title;
+  const grid=document.createElement('div');grid.className='overview-part';
+  grid.style.gridTemplateColumns=`repeat(${cols}, var(--cell))`;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)grid.append(cellFn(r,c));
+  section.append(heading,grid);parent.append(section);
+}
+function ovButton(active,label,callback){
+  const b=document.createElement('button');b.type='button';b.textContent=active?'●':'';
+  b.className=active?'selected':'';b.setAttribute('aria-label',label);
+  b.addEventListener('click',callback);return b;
+}
+function renderOverview(){
+  const board=$('overviewBoard');if(!board)return;
+  board.replaceChildren();board.style.setProperty('--cell',overviewCellSize+'px');
+  const ends=draft.threading.length,picks=draft.treadling.length;
+  // Passage en lisses : rangées de cadres, colonnes de fils.
+  makeOverviewGrid(board,draft.shafts,ends,(r,c)=>ovButton(
+    draft.threading[c]===r,`Fil ${c+1}, cadre ${r+1}`,
+    ()=>{draft.threading[c]=r;changed('Passage modifié.')}),'Passage en lisses (cadres × fils)');
+  // Attachage : rangées de cadres, colonnes de pédales.
+  makeOverviewGrid(board,draft.shafts,draft.pedals,(r,c)=>ovButton(
+    draft.tieUp[r][c],`Cadre ${r+1}, pédale ${c+1}`,
+    ()=>{draft.tieUp[r][c]=!draft.tieUp[r][c];changed('Attachage modifié.')}),'Attachage (cadres × pédales)');
+  makeOverviewGrid(board,picks,ends,(r,c)=>{
+    const cell=document.createElement('div');cell.className='ov-cell';
+    const above=warpUp(draft.threading[c],r);
+    cell.style.background=palette[above?draft.warpColors[c]:draft.weftColors[r]].hex;
+    cell.title=`Duite ${r+1}, fil ${c+1} : ${above?'chaîne':'trame'} visible`;
+    return cell;
+  },'Dessin du tissu (duites × fils)');
+  makeOverviewGrid(board,picks,draft.pedals,(r,c)=>ovButton(
+    draft.treadling[r][c],`Duite ${r+1}, pédale ${c+1}`,
+    ()=>{draft.treadling[r][c]=!draft.treadling[r][c];changed('Marchure modifiée.')}),'Marchure (duites × pédales)');
+}
+$('zoomControl').addEventListener('input',e=>{overviewCellSize=Number(e.target.value);renderOverview()});
+const originalRender=render;
+render=function(){originalRender();renderOverview()};
+
 try{const saved=localStorage.getItem(STORAGE_KEY);if(saved)draft=normalizeDraft(JSON.parse(saved))}catch(e){notify('Sauvegarde précédente invalide; un nouveau patron est chargé.')}
 render();
