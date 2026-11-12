@@ -26,7 +26,101 @@ function validColorIndex(value){const n=Number(value);return Number.isInteger(n)
 function saveLocal(showMessage=false){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(draft));if(showMessage)notify('Patron enregistré sur cet appareil.')}catch(e){notify('Impossible de sauvegarder : espace de stockage indisponible.')}}
 function changed(message='Modifications enregistrées automatiquement.'){render();saveLocal();notify(message)}
 function warpUp(shaft,pick){const connected=draft.treadling[pick].some((pressed,p)=>pressed&&draft.tieUp[shaft][p]);return draft.mode==='rising'?connected:!connected}
-function renderDrawdown(){const box=$('drawdownGrid');box.replaceChildren();draft.treadling.forEach((_,pick)=>{const row=document.createElement('div');row.className='weave-row';draft.threading.forEach((shaft,end)=>{const cell=document.createElement('div');cell.className='weave-cell';const up=warpUp(shaft,pick);const ci=up?draft.warpColors[end]:draft.weftColors[pick];cell.style.background=palette[ci].hex;cell.title=`Duite ${pick+1} · Fil ${end+1} · ${up?'Chaîne au-dessus':'Trame au-dessus'}`;row.appendChild(cell)});box.appendChild(row)})}
+
+/* VERSION 4 — Affichage optimisé du tissu */
+
+function renderDrawdown() {
+  const container = $('drawdownGrid');
+  if (!container) return;
+
+  container.replaceChildren();
+
+  const ends = draft.threading.length;
+  const picks = draft.treadling.length;
+
+  const cellSize = 12;
+  const width = ends * cellSize;
+  const height = picks * cellSize;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  canvas.style.display = 'block';
+
+  const ctx = canvas.getContext('2d', {
+    alpha: false
+  });
+
+  if (!ctx) {
+    notify('Impossible de dessiner le patron.');
+    return;
+  }
+
+  // Calcul des cadres actionnés pour chaque duite
+  const activeShafts = draft.treadling.map(
+    pressedPedals => {
+      return Array.from(
+        { length: draft.shafts },
+        (_, shaft) => pressedPedals.some(
+          (pressed, pedal) =>
+            pressed && draft.tieUp[shaft]?.[pedal]
+        )
+      );
+    }
+  );
+
+  // Dessin du tissu
+  for (let pick = 0; pick < picks; pick++) {
+    for (let end = 0; end < ends; end++) {
+
+      const shaft = draft.threading[end];
+      const connected = activeShafts[pick][shaft];
+
+      const warpVisible = draft.mode === 'rising'
+        ? connected
+        : !connected;
+
+      const colorIndex = warpVisible
+        ? draft.warpColors[end]
+        : draft.weftColors[pick];
+
+      ctx.fillStyle =
+        palette[colorIndex]?.hex || '#E9DFC9';
+
+      const x = end * cellSize;
+      const y = pick * cellSize;
+
+      ctx.fillRect(
+        x,
+        y,
+        cellSize,
+        cellSize
+      );
+    }
+  }
+
+  // Quadrillage léger
+  ctx.strokeStyle = 'rgba(0,0,0,0.20)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+
+  for (let x = 0; x <= width; x += cellSize) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+
+  for (let y = 0; y <= height; y += cellSize) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+  }
+
+  ctx.stroke();
+
+  container.appendChild(canvas);
+}
+
 function renderThreading(){const box=$('threadingEditor');box.replaceChildren();draft.threading.forEach((shaft,i)=>{const row=document.createElement('div');row.className='editor-row';const label=document.createElement('span');label.className='row-label';label.textContent=`Fil ${i+1}`;const select=document.createElement('select');for(let s=0;s<draft.shafts;s++){const option=new Option(`Cadre ${s+1}`,String(s));option.selected=s===shaft;select.add(option)}select.addEventListener('change',()=>{draft.threading[i]=Number(select.value);changed()});row.append(label,select);box.append(row)})}
 function renderMatrix(targetId,matrix,rowLabel,columnPrefix,onToggle){const box=$(targetId);box.replaceChildren();const grid=document.createElement('div');grid.className='matrix';grid.style.gridTemplateColumns=`75px repeat(${draft.pedals},38px)`;const corner=document.createElement('div');grid.append(corner);for(let p=0;p<draft.pedals;p++){const h=document.createElement('div');h.className='head';h.textContent=`${columnPrefix}${p+1}`;grid.append(h)}matrix.forEach((row,r)=>{const h=document.createElement('div');h.className='rowhead';h.textContent=`${rowLabel} ${r+1}`;grid.append(h);row.forEach((active,c)=>{const b=document.createElement('button');b.type='button';b.className=active?'selected':'';b.textContent=active?'●':'○';b.setAttribute('aria-label',`${rowLabel} ${r+1}, ${columnPrefix}${c+1}, ${active?'actif':'inactif'}`);b.addEventListener('click',()=>onToggle(r,c));grid.append(b)})});box.append(grid)}
 function renderColors(targetId,items,prefix,onChange){const box=$(targetId);box.replaceChildren();items.forEach((color,i)=>{const row=document.createElement('div');row.className='color-row';const label=document.createElement('label');label.textContent=`${prefix} ${i+1}`;const select=document.createElement('select');palette.forEach((c,index)=>select.add(new Option(c.name,String(index))));select.value=String(color);select.addEventListener('change',()=>onChange(i,Number(select.value)));const chip=document.createElement('span');chip.className='color-chip';chip.style.background=palette[color].hex;row.append(label,select,chip);box.append(row)})}
