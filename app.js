@@ -263,18 +263,23 @@ $('pickCountInput').value = draft.treadling.length;
 
 /* SESSION 6 — Calculs pour plusieurs pièces */
 
+
+/* SESSION 7 — Ourlets et franges */
+
 function calculateWeaving() {
   const ids = [
     'calcEpi', 'calcPpi', 'calcLength',
     'calcShrink', 'calcTakeup', 'calcWaste',
-    'calcPieces', 'calcSeparation'
+    'calcPieces', 'calcSeparation',
+    'calcHemStart', 'calcHemEnd',
+    'calcFringeStart', 'calcFringeEnd'
   ];
-
-  const values = ids.map(id => $(id).value.trim());
 
   const output = $('calculationResults');
 
-  if (values.some(v => v === '')) {
+  const raw = ids.map(id => $(id)?.value.trim());
+
+  if (raw.some(v => v === undefined || v === '')) {
     output.textContent = 'Remplis tous les champs.';
     return;
   }
@@ -282,20 +287,23 @@ function calculateWeaving() {
   const [
     epi, ppi, finishedLength,
     shrink, takeup, waste,
-    pieces, separation
-  ] = values.map(Number);
+    pieces, separation,
+    hemStart, hemEnd,
+    fringeStart, fringeEnd
+  ] = raw.map(Number);
+
+  const numbers = raw.map(Number);
 
   if (
-    ![epi, ppi, finishedLength, shrink,
-      takeup, waste, pieces, separation]
-      .every(Number.isFinite) ||
+    !numbers.every(Number.isFinite) ||
     epi <= 0 || ppi <= 0 ||
     finishedLength <= 0 ||
     shrink < 0 || shrink >= 100 ||
     takeup < 0 || waste < 0 ||
     !Number.isInteger(pieces) ||
     pieces < 1 || pieces > 100 ||
-    separation < 0
+    [separation, hemStart, hemEnd,
+     fringeStart, fringeEnd].some(v => v < 0)
   ) {
     output.textContent =
       'Vérifie les valeurs saisies.';
@@ -303,39 +311,51 @@ function calculateWeaving() {
   }
 
   const ends = draft.threading.length;
-
-  // Largeur sur le métier
   const width = ends / epi;
 
-  // Longueur tissée par pièce avant retrait
-  const wovenPerPiece =
+  // Corps de chaque pièce, avant retrait
+  const wovenBody =
     finishedLength / (1 - shrink / 100);
 
-  // Longueur totale des pièces
-  const totalWovenPieces =
-    wovenPerPiece * pieces;
+  // Ourlets tissés à chaque extrémité
+  const hemsPerPiece = hemStart + hemEnd;
 
-  // Séparations entre les pièces seulement
+  // Franges non tissées
+  const fringesPerPiece =
+    fringeStart + fringeEnd;
+
+  // Longueur tissée totale
+  const wovenPerPiece = wovenBody + hemsPerPiece;
+
+  const totalWoven = wovenPerPiece * pieces;
+
+  // Longueur de franges réservée
+  const totalFringes = fringesPerPiece * pieces;
+
+  // Séparations supplémentaires
   const totalSeparation =
     separation * (pieces - 1);
 
-  // Longueur à ourdir par fil
+  // Embuvage appliqué aux sections tissées
   const warpPerEnd =
-    (totalWovenPieces + totalSeparation) *
-    (1 + takeup / 100) + waste;
+    (totalWoven + totalSeparation) *
+    (1 + takeup / 100) +
+    totalFringes +
+    waste;
 
-  // Duites nécessaires
-  const picksPerPiece =
-    Math.ceil(wovenPerPiece * ppi);
-
+  // Nombre estimé de duites
+  const bodyPicks = Math.ceil(wovenBody * ppi);
+  const hemPicks = Math.ceil(hemsPerPiece * ppi);
   const separationPicks =
     Math.ceil(separation * ppi);
+
+  const picksPerPiece = bodyPicks + hemPicks;
 
   const totalPicks =
     picksPerPiece * pieces +
     separationPicks * (pieces - 1);
 
-  // Quantités de fil en verges
+  // Quantités de fil
   const totalWarpYards =
     ends * warpPerEnd / 36;
 
@@ -347,27 +367,31 @@ function calculateWeaving() {
       maximumFractionDigits: digits
     });
 
-  output.replaceChildren();
-
   const results = [
     ['Nombre de pièces', format(pieces, 0)],
     ['Fils de chaîne', format(ends, 0)],
     ['Largeur au métier', format(width) + ' po'],
-    ['Longueur tissée par pièce',
-      format(wovenPerPiece) + ' po'],
+    ['Corps tissé par pièce',
+      format(wovenBody) + ' po'],
+    ['Ourlets par pièce',
+      format(hemsPerPiece) + ' po'],
+    ['Franges par pièce',
+      format(fringesPerPiece) + ' po'],
     ['Longueur totale des séparations',
       format(totalSeparation) + ' po'],
     ['Longueur à ourdir par fil',
       format(warpPerEnd) + ' po'],
     ['Duites par pièce',
       format(picksPerPiece, 0)],
-    ['Duites totales, séparations incluses',
+    ['Duites totales',
       format(totalPicks, 0)],
     ['Chaîne totale',
       format(totalWarpYards) + ' verges'],
     ['Trame minimale estimée',
       format(totalWeftYards) + ' verges']
   ];
+
+  output.replaceChildren();
 
   for (const [label, value] of results) {
     const p = document.createElement('p');
@@ -383,6 +407,8 @@ function calculateWeaving() {
     output.append(p);
   }
 }
+
+
 
 $('calculateButton').addEventListener(
   'click',
