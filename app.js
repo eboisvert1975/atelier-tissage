@@ -260,56 +260,87 @@ $('endCountInput').value = draft.threading.length;
 $('pickCountInput').value = draft.treadling.length;
 
 
-/* SESSION 5 — Calculs de tissage */
+
+/* SESSION 6 — Calculs pour plusieurs pièces */
 
 function calculateWeaving() {
-  const read = id => Number($(id).value);
-
-  const epi = read('calcEpi');
-  const ppi = read('calcPpi');
-  const finishedLength = read('calcLength');
-  const shrink = read('calcShrink');
-  const takeup = read('calcTakeup');
-  const waste = read('calcWaste');
-
-  const values = [
-    epi, ppi, finishedLength,
-    shrink, takeup, waste
+  const ids = [
+    'calcEpi', 'calcPpi', 'calcLength',
+    'calcShrink', 'calcTakeup', 'calcWaste',
+    'calcPieces', 'calcSeparation'
   ];
+
+  const values = ids.map(id => $(id).value.trim());
 
   const output = $('calculationResults');
 
+  if (values.some(v => v === '')) {
+    output.textContent = 'Remplis tous les champs.';
+    return;
+  }
+
+  const [
+    epi, ppi, finishedLength,
+    shrink, takeup, waste,
+    pieces, separation
+  ] = values.map(Number);
+
   if (
-    values.some(v => !Number.isFinite(v)) ||
-    ['calcEpi','calcPpi','calcLength',
-     'calcShrink','calcTakeup','calcWaste']
-      .some(id => $(id).value.trim() === '') ||
+    ![epi, ppi, finishedLength, shrink,
+      takeup, waste, pieces, separation]
+      .every(Number.isFinite) ||
     epi <= 0 || ppi <= 0 ||
     finishedLength <= 0 ||
     shrink < 0 || shrink >= 100 ||
-    takeup < 0 || waste < 0
+    takeup < 0 || waste < 0 ||
+    !Number.isInteger(pieces) ||
+    pieces < 1 || pieces > 100 ||
+    separation < 0
   ) {
     output.textContent =
-      'Vérifie les valeurs des calculs.';
+      'Vérifie les valeurs saisies.';
     return;
   }
 
   const ends = draft.threading.length;
 
+  // Largeur sur le métier
   const width = ends / epi;
-  const loomLength =
+
+  // Longueur tissée par pièce avant retrait
+  const wovenPerPiece =
     finishedLength / (1 - shrink / 100);
 
+  // Longueur totale des pièces
+  const totalWovenPieces =
+    wovenPerPiece * pieces;
+
+  // Séparations entre les pièces seulement
+  const totalSeparation =
+    separation * (pieces - 1);
+
+  // Longueur à ourdir par fil
   const warpPerEnd =
-    loomLength * (1 + takeup / 100) + waste;
+    (totalWovenPieces + totalSeparation) *
+    (1 + takeup / 100) + waste;
 
-  const picks = Math.ceil(loomLength * ppi);
+  // Duites nécessaires
+  const picksPerPiece =
+    Math.ceil(wovenPerPiece * ppi);
 
+  const separationPicks =
+    Math.ceil(separation * ppi);
+
+  const totalPicks =
+    picksPerPiece * pieces +
+    separationPicks * (pieces - 1);
+
+  // Quantités de fil en verges
   const totalWarpYards =
     ends * warpPerEnd / 36;
 
-  const minimumWeftYards =
-    picks * width / 36;
+  const totalWeftYards =
+    totalPicks * width / 36;
 
   const format = (n, digits = 1) =>
     n.toLocaleString('fr-CA', {
@@ -319,22 +350,36 @@ function calculateWeaving() {
   output.replaceChildren();
 
   const results = [
+    ['Nombre de pièces', format(pieces, 0)],
     ['Fils de chaîne', format(ends, 0)],
     ['Largeur au métier', format(width) + ' po'],
+    ['Longueur tissée par pièce',
+      format(wovenPerPiece) + ' po'],
+    ['Longueur totale des séparations',
+      format(totalSeparation) + ' po'],
     ['Longueur à ourdir par fil',
       format(warpPerEnd) + ' po'],
-    ['Duites estimées', format(picks, 0)],
+    ['Duites par pièce',
+      format(picksPerPiece, 0)],
+    ['Duites totales, séparations incluses',
+      format(totalPicks, 0)],
     ['Chaîne totale',
       format(totalWarpYards) + ' verges'],
-    ['Trame minimale',
-      format(minimumWeftYards) + ' verges']
+    ['Trame minimale estimée',
+      format(totalWeftYards) + ' verges']
   ];
 
   for (const [label, value] of results) {
     const p = document.createElement('p');
     const strong = document.createElement('strong');
+
     strong.textContent = label + ' : ';
-    p.append(strong, document.createTextNode(value));
+
+    p.append(
+      strong,
+      document.createTextNode(value)
+    );
+
     output.append(p);
   }
 }
