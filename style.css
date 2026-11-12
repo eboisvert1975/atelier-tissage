@@ -37,3 +37,28 @@
   max-width: none;
   image-rendering: pixelated;
 }
+
+
+/* SESSION 5 — Calculateur */
+
+.calculation-results {
+  margin-top: 18px;
+  padding: 14px;
+  background: #f4f6f1;
+  border: 1px solid #dce3d9;
+  border-radius: 12px;
+}
+
+.calculation-results:empty {
+  display: none;
+}
+
+.calculation-results p {
+  margin: 9px 0;
+  font-size: 14px;
+}
+
+#calculateButton {
+  margin-top: 16px;
+}
+
