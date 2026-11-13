@@ -388,21 +388,46 @@ $('exportJSON').addEventListener('click', () => {
     notify('Fichier JSON exporté.')
 });
 $('importButton').addEventListener('click', () => $('importFile').click());
+
 $('importFile').addEventListener('change', async e => {
-    const file = e.target.files?.[0];
-    if (!file)
-        return;
-    try {
-        draft = normalizeDraft(JSON.parse(await file.text()));
-        loadCalculations();
-        changed('Patron importé et sauvegardé.');
-        calculateWeaving();
-    } catch (error) {
-        notify('Importation impossible : ' + error.message)
-    } finally {
-        e.target.value = ''
-    }
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const content = await file.text();
+    const imported = JSON.parse(content);
+
+    // Vérifier et charger le patron
+    const newDraft = normalizeDraft(imported);
+
+    // Restaurer les paramètres de calcul
+    newDraft.calculations = normalizeCalculations(
+      imported.calculations
+    );
+
+    draft = newDraft;
+
+    // Restaurer tous les champs de l'interface
+    render();
+    loadCalculations();
+
+    // Recalculer les résultats
+    calculateWeaving();
+
+    // Sauvegarder le patron importé
+    saveLocal();
+
+    notify('Patron importé avec tous ses paramètres.');
+
+  } catch (error) {
+    notify(
+      'Importation impossible : ' + error.message
+    );
+  } finally {
+    e.target.value = '';
+  }
 });
+
 
 // Vue quadrillée complète : même modèle de données que les autres onglets.
 let overviewCellSize = 24;
