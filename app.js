@@ -811,3 +811,28 @@ for (const id of Object.keys(CALC_FIELDS)) {
 
 // Calcul initial.
 calculateWeaving();
+
+
+/* Synchronisation des dimensions du patron */
+
+function updateDimensionFields() {
+  const endsInput = $('endCountInput');
+  const picksInput = $('pickCountInput');
+
+  if (endsInput) {
+    endsInput.value = draft.threading.length;
+  }
+
+  if (picksInput) {
+    picksInput.value = draft.treadling.length;
+  }
+
+  const dimensions = $('dimensions');
+
+  if (dimensions) {
+    dimensions.textContent =
+      `${draft.threading.length} fils × ` +
+      `${draft.treadling.length} duites`;
+  }
+}
+
