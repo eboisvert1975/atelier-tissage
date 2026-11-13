@@ -383,7 +383,9 @@ function calculateWeaving() {
     ['Longueur totale des séparations',
       format(totalSeparation) + ' po'],
     ['Longueur à ourdir par fil',
-      format(warpPerEnd) + ' po'],
+      format(warpPerEnd) + ' po (' +
+      format(warpPerEnd / 36, 2) + ' verges)'],
+
     ['Duites par pièce',
       format(picksPerPiece, 0)],
     ['Duites totales',
