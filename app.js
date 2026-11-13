@@ -250,6 +250,8 @@ function applyDimensions() {
   changed(
     `Patron redimensionné : ${ends} fils × ${picks} duites.`
   );
+  
+  calculateWeaving();
 }
 
 $('applyDimensions').addEventListener(
