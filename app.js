@@ -408,10 +408,95 @@ function calculateWeaving() {
   }
 }
 
-
-
 $('calculateButton').addEventListener(
   'click',
   calculateWeaving
 );
+
+
+
+/* SESSION 8 — Sauvegarde des calculs */
+
+const CALC_FIELDS = {
+  calcEpi: 20,
+  calcPpi: 20,
+  calcLength: 30,
+  calcShrink: 10,
+  calcTakeup: 10,
+  calcWaste: 24,
+  calcPieces: 1,
+  calcSeparation: 1,
+  calcHemStart: 0.75,
+  calcHemEnd: 0.75,
+  calcFringeStart: 0,
+  calcFringeEnd: 0
+};
+
+// Ajoute les valeurs manquantes aux anciens patrons.
+function normalizeCalculations(values) {
+  const result = {};
+
+  for (const [id, defaultValue] of
+    Object.entries(CALC_FIELDS)) {
+
+    const raw = values?.[id];
+    const number = Number(raw);
+
+    result[id] =
+      raw !== undefined &&
+      raw !== null &&
+      raw !== '' &&
+      Number.isFinite(number)
+        ? number
+        : defaultValue;
+  }
+
+  return result;
+}
+
+// Récupère les paramètres de l'interface.
+function readCalculations() {
+  const values = {};
+
+  for (const id of Object.keys(CALC_FIELDS)) {
+    values[id] = $(id).value;
+  }
+
+  return normalizeCalculations(values);
+}
+
+// Remplit les champs à partir du patron.
+function loadCalculations() {
+  draft.calculations =
+    normalizeCalculations(draft.calculations);
+
+  for (const [id, value] of
+    Object.entries(draft.calculations)) {
+
+    $(id).value = String(value);
+  }
+}
+
+// Sauvegarde les paramètres du patron.
+function saveCalculations() {
+  draft.calculations = readCalculations();
+
+  saveLocal();
+  notify('Paramètres de calcul enregistrés.');
+}
+
+// Chargement initial.
+loadCalculations();
+
+// Sauvegarde automatique à chaque changement.
+for (const id of Object.keys(CALC_FIELDS)) {
+  $(id).addEventListener('change', () => {
+    saveCalculations();
+    calculateWeaving();
+  });
+}
+
+// Calcul initial.
+calculateWeaving();
+
 
