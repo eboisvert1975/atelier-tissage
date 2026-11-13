@@ -139,7 +139,7 @@ document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click
 $('saveButton').addEventListener('click',()=>saveLocal(true));
 $('exportJSON').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(draft,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=(draft.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')||'patron')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Fichier JSON exporté.')});
 $('importButton').addEventListener('click',()=>$('importFile').click());
-$('importFile').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{draft=normalizeDraft(JSON.parse(await file.text()));changed('Patron importé et sauvegardé.')}catch(error){notify('Importation impossible : '+error.message)}finally{e.target.value=''}});
+$('importFile').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{draft=normalizeDraft(JSON.parse(await file.text())); loadCalculations(); changed('Patron importé et sauvegardé.'); calculateWeaving();}catch(error){notify('Importation impossible : '+error.message)}finally{e.target.value=''}});
 
 // Vue quadrillée complète : même modèle de données que les autres onglets.
 let overviewCellSize=24;
