@@ -376,6 +376,8 @@ document.querySelectorAll('.tab').forEach(button => button.addEventListener('cli
     }));
 $('saveButton').addEventListener('click', () => saveLocal(true));
 $('exportJSON').addEventListener('click', () => {
+    draft.calculations = readCalculations();
+    saveLocal();
     const blob = new Blob([JSON.stringify(draft, null, 2)], {
         type: 'application/json'
     });
