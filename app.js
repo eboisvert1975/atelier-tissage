@@ -315,6 +315,7 @@ function render() {
     });
     $('removeEnd').disabled = draft.threading.length <= 1;
     $('removePick').disabled = draft.treadling.length <= 1;
+    updateDimensionFields();
 }
 $('addEnd').addEventListener('click', () => {
     draft.threading.push(((draft.threading.at(-1) + 1) % draft.shafts));
@@ -411,6 +412,7 @@ $('importFile').addEventListener('change', async e => {
 
     // Restaurer tous les champs de l'interface
     render();
+    updateDimensionFields();
     loadCalculations();
 
     // Recalculer les résultats
