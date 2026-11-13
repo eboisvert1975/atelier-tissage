@@ -285,6 +285,16 @@ function render() {
     $('pedals').value = String(draft.pedals);
     $('mode').value = draft.mode;
     $('dimensions').textContent = `${draft.threading.length} fils × ${draft.treadling.length} duites`;
+    
+    if ($('endCountInput')) {
+      $('endCountInput').value = draft.threading.length;
+    }
+
+    if ($('pickCountInput')) {
+      $('pickCountInput').value = draft.treadling.length;
+    }
+
+    
     renderDrawdown();
     renderThreading();
     renderMatrix('tieupEditor', draft.tieUp, 'Cadre', 'P', (r, c) => {
