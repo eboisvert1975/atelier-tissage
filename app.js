@@ -87,6 +87,8 @@ function normalizeDraft(raw) {
         treadling,
         warpColors,
         weftColors,
+        endCount: threading.length,
+        pickCount: treadling.length,
         calculations: normalizeCalculations(raw.calculations)
     };
 }
@@ -377,6 +379,9 @@ document.querySelectorAll('.tab').forEach(button => button.addEventListener('cli
     }));
 $('saveButton').addEventListener('click', () => saveLocal(true));
 $('exportJSON').addEventListener('click', () => {
+    draft.endCount = draft.threading.length;
+    draft.pickCount = draft.treadling.length
+    
     draft.calculations = readCalculations();
     saveLocal();
     const blob = new Blob([JSON.stringify(draft, null, 2)], {
