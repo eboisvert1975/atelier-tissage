@@ -9,6 +9,7 @@ const STORAGE_KEY='atelier-tissage-draft-v2';
 function freshDraft(){return {version:2,name:'Mon premier patron',shafts:4,pedals:6,mode:'sinking',threading:Array.from({length:16},(_,i)=>i%4),tieUp:Array.from({length:4},(_,s)=>Array.from({length:6},(_,p)=>p===s%2)),treadling:Array.from({length:8},(_,i)=>Array.from({length:6},(_,p)=>p===i%2)),warpColors:Array.from({length:16},(_,i)=>i%4+1),weftColors:Array(8).fill(0)}}
 let draft=freshDraft();
 function notify(message){$('message').textContent=message}
+
 function normalizeDraft(raw){
   const shafts=Number(raw.shafts),pedals=Number(raw.pedals);
   if(![4,8].includes(shafts)||![4,6,8,10,12].includes(pedals))throw Error('Configuration du métier invalide.');
@@ -20,7 +21,7 @@ function normalizeDraft(raw){
   const treadling=raw.treadling.map(row=>{if(!Array.isArray(row))throw Error('Une ligne de marchure est invalide.');return Array.from({length:pedals},(_,p)=>Boolean(row[p]));});
   const warpColors=threading.map((_,i)=>validColorIndex(raw.warpColors?.[i]));
   const weftColors=treadling.map((_,i)=>validColorIndex(raw.weftColors?.[i]));
-  return {version:2,name:String(raw.name||'Patron importé').slice(0,80),shafts,pedals,mode:raw.mode==='rising'?'rising':'sinking',threading,tieUp,treadling,warpColors,weftColors};
+  return {version:2,name:String(raw.name||'Patron importé').slice(0,80),shafts,pedals,mode:raw.mode==='rising'?'rising':'sinking',threading,tieUp,treadling,warpColors,weftColors,calculations: normalizeCalculations(raw.calculations)};
 }
 function validColorIndex(value){const n=Number(value);return Number.isInteger(n)&&n>=0&&n<palette.length?n:0}
 function saveLocal(showMessage=false){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(draft));if(showMessage)notify('Patron enregistré sur cet appareil.')}catch(e){notify('Impossible de sauvegarder : espace de stockage indisponible.')}}
