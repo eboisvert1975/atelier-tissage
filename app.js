@@ -245,8 +245,15 @@ function renderMatrix(targetId, matrix, rowLabel, columnPrefix, onToggle) {
         grid.append(h)
     }
     
-    matrix.map((row, r) => ({
-          row, r})).reverse().forEach(({ row, r }) => {
+    
+    const displayRows = matrix.map((row, r) => ({ row, r }));
+
+    if (targetId === 'tieupEditor') {
+      displayRows.reverse();
+    }
+
+    displayRows.forEach(({ row, r }) => {
+
 
         const h = document.createElement('div');
         h.className = 'rowhead';
