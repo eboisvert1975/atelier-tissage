@@ -843,3 +843,304 @@ function updateDimensionFields() {
   }
 }
 
+
+/* SESSION 9 — Bibliothèque de patrons */
+
+const LIBRARY_KEY = 'atelier-tissage-library-v1';
+let activeLibraryId = null;
+
+function libraryRead() {
+  try {
+    const data = JSON.parse(
+      localStorage.getItem(LIBRARY_KEY) || '[]'
+    );
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    libraryNotice('Bibliothèque illisible.');
+    return [];
+  }
+}
+
+function libraryNotice(message) {
+  $('libraryMessage').textContent = message;
+}
+
+function libraryWrite(items) {
+  try {
+    localStorage.setItem(
+      LIBRARY_KEY,
+      JSON.stringify(items)
+    );
+    return true;
+  } catch (error) {
+    libraryNotice(
+      'Enregistrement impossible. Vérifie le stockage.'
+    );
+    return false;
+  }
+}
+
+function libraryId() {
+  return 'patron-' + Date.now() + '-' +
+    Math.random().toString(36).slice(2, 10);
+}
+
+function librarySnapshot() {
+  const copy = JSON.parse(JSON.stringify(draft));
+
+  if (typeof readCalculations === 'function') {
+    copy.calculations = readCalculations();
+  }
+
+  copy.endCount = copy.threading.length;
+  copy.pickCount = copy.treadling.length;
+
+  return copy;
+}
+
+function libraryRefresh() {
+  const container = $('libraryList');
+  container.replaceChildren();
+
+  const items = libraryRead();
+
+  if (items.length === 0) {
+    container.textContent =
+      'Aucun patron enregistré pour le moment.';
+    return;
+  }
+
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'library-item';
+
+    const info = document.createElement('div');
+    const name = document.createElement('strong');
+
+    name.textContent = item.name;
+
+    const details = document.createElement('small');
+    const ends = item.data?.threading?.length || 0;
+    const picks = item.data?.treadling?.length || 0;
+
+    details.textContent =
+      `${ends} fils × ${picks} duites`;
+
+    if (item.id === activeLibraryId) {
+      details.textContent += ' · Patron actif';
+    }
+
+    info.append(name, details);
+
+    const actions = document.createElement('div');
+    actions.className = 'library-actions';
+
+    const addButton = (label, handler) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = label;
+      button.className = 'secondary';
+      button.addEventListener('click', handler);
+      actions.append(button);
+    };
+
+    addButton('Ouvrir', () => libraryOpen(item.id));
+    addButton('Dupliquer', () => libraryDuplicate(item.id));
+    addButton('Renommer', () => libraryRename(item.id));
+    addButton('Supprimer', () => libraryDelete(item.id));
+
+    row.append(info, actions);
+    container.append(row);
+  });
+}
+
+function librarySaveCurrent() {
+  const items = libraryRead();
+  const data = librarySnapshot();
+
+  let index = items.findIndex(
+    item => item.id === activeLibraryId
+  );
+
+  if (index === -1) {
+    activeLibraryId = libraryId();
+
+    items.push({
+      id: activeLibraryId,
+      name: data.name,
+      data: data
+    });
+  } else {
+    items[index].name = data.name;
+    items[index].data = data;
+  }
+
+  if (!libraryWrite(items)) return;
+
+  saveLocal();
+  libraryRefresh();
+  libraryNotice('Patron enregistré dans la bibliothèque.');
+}
+
+function libraryOpen(id) {
+  const item = libraryRead().find(
+    entry => entry.id === id
+  );
+
+  if (!item) return;
+
+  if (!confirm(
+    'Ouvrir ce patron? Les modifications non ' +
+    'enregistrées dans la bibliothèque seront perdues.'
+  )) return;
+
+  try {
+    const imported = normalizeDraft(item.data);
+
+    // Restaurer les paramètres de calcul
+    if (typeof normalizeCalculations === 'function') {
+      imported.calculations = normalizeCalculations(
+        item.data.calculations
+      );
+    }
+
+    draft = imported;
+    activeLibraryId = id;
+
+    render();
+
+    if (typeof updateDimensionFields === 'function') {
+      updateDimensionFields();
+    }
+
+    if (typeof loadCalculations === 'function') {
+      loadCalculations();
+    }
+
+    if (typeof calculateWeaving === 'function') {
+      calculateWeaving();
+    }
+
+    saveLocal();
+    libraryRefresh();
+
+    libraryNotice('Patron ouvert : ' + draft.name);
+  } catch (error) {
+    libraryNotice(
+      'Impossible d’ouvrir : ' + error.message
+    );
+  }
+}
+
+function libraryNew() {
+  if (!confirm(
+    'Créer un nouveau patron? Enregistre ' +
+    'd’abord les modifications du patron actuel.'
+  )) return;
+
+  draft = freshDraft();
+  activeLibraryId = null;
+
+  render();
+
+  if (typeof updateDimensionFields === 'function') {
+    updateDimensionFields();
+  }
+
+  if (typeof loadCalculations === 'function') {
+    loadCalculations();
+  }
+
+  if (typeof calculateWeaving === 'function') {
+    calculateWeaving();
+  }
+
+  saveLocal();
+  libraryRefresh();
+  libraryNotice('Nouveau patron créé.');
+}
+
+function libraryDuplicate(id) {
+  const items = libraryRead();
+  const original = items.find(item => item.id === id);
+
+  if (!original) return;
+
+  const copy = JSON.parse(JSON.stringify(original.data));
+  copy.name = original.name + ' (copie)';
+
+  items.push({
+    id: libraryId(),
+    name: copy.name,
+    data: copy
+  });
+
+  if (!libraryWrite(items)) return;
+
+  libraryRefresh();
+  libraryNotice('Copie du patron créée.');
+}
+
+function libraryRename(id) {
+  const items = libraryRead();
+  const item = items.find(entry => entry.id === id);
+
+  if (!item) return;
+
+  const name = prompt(
+    'Nouveau nom du patron :',
+    item.name
+  );
+
+  if (name === null || !name.trim()) return;
+
+  item.name = name.trim().slice(0, 80);
+  item.data.name = item.name;
+
+  if (!libraryWrite(items)) return;
+
+  if (activeLibraryId === id) {
+    draft.name = item.name;
+    render();
+    saveLocal();
+  }
+
+  libraryRefresh();
+  libraryNotice('Patron renommé.');
+}
+
+function libraryDelete(id) {
+  const items = libraryRead();
+  const item = items.find(entry => entry.id === id);
+
+  if (!item) return;
+
+  if (!confirm(
+    'Supprimer définitivement « ' +
+    item.name + ' » de la bibliothèque?'
+  )) return;
+
+  const remaining = items.filter(
+    entry => entry.id !== id
+  );
+
+  if (!libraryWrite(remaining)) return;
+
+  if (activeLibraryId === id) {
+    activeLibraryId = null;
+  }
+
+  libraryRefresh();
+  libraryNotice('Patron supprimé de la bibliothèque.');
+}
+
+$('libraryNew').addEventListener(
+  'click', libraryNew
+);
+
+$('librarySave').addEventListener(
+  'click', librarySaveCurrent
+);
+
+libraryRefresh();
+
