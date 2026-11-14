@@ -1144,3 +1144,277 @@ $('librarySave').addEventListener(
 
 libraryRefresh();
 
+
+/* SESSION 10 — Export Excel */
+
+function exportWeavingExcel() {
+  if (typeof XLSX === 'undefined') {
+    notify(
+      'Bibliothèque Excel indisponible. ' +
+      'Vérifie ta connexion Internet.'
+    );
+    return;
+  }
+
+  try {
+    // Conserver les derniers paramètres de calcul
+    if (typeof readCalculations === 'function') {
+      draft.calculations = readCalculations();
+      saveLocal();
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    function addSheet(name, rows) {
+      const sheet = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(
+        workbook, sheet, name
+      );
+      return sheet;
+    }
+
+    // FEUILLE 1 — INFORMATIONS
+    const info = [
+      ['ATELIER DE TISSAGE'],
+      ['Nom du patron', draft.name],
+      ['Mécanisme',
+        draft.mode === 'rising'
+          ? 'À la lève'
+          : 'À la baisse'],
+      ['Nombre de cadres', draft.shafts],
+      ['Nombre de pédales', draft.pedals],
+      ['Nombre de fils', draft.threading.length],
+      ['Nombre de duites', draft.treadling.length],
+      [],
+      ['PARAMÈTRES DE CALCUL']
+    ];
+
+    const calcLabels = {
+      calcEpi: 'Densité chaîne (fils/po)',
+      calcPpi: 'Densité trame (duites/po)',
+      calcLength: 'Longueur finie du corps (po)',
+      calcShrink: 'Retrait longueur (%)',
+      calcTakeup: 'Embuvage chaîne (%)',
+      calcWaste: 'Pertes chaîne (po)',
+      calcPieces: 'Nombre de pièces',
+      calcSeparation: 'Séparation (po)',
+      calcHemStart: 'Ourlet début (po)',
+      calcHemEnd: 'Ourlet fin (po)',
+      calcFringeStart: 'Franges début (po)',
+      calcFringeEnd: 'Franges fin (po)'
+    };
+
+    for (const [key, label] of
+      Object.entries(calcLabels)) {
+      info.push([
+        label,
+        draft.calculations?.[key] ?? ''
+      ]);
+    }
+
+    info.push(
+      [],
+      ['PALETTE DE COULEURS'],
+      ['Numéro', 'Nom', 'Code hexadécimal']
+    );
+
+    palette.forEach((color, index) => {
+      info.push([
+        index,
+        color.name,
+        color.hex
+      ]);
+    });
+
+    const infoSheet = addSheet('Informations', info);
+    infoSheet['!cols'] = [
+      { wch: 34 },
+      { wch: 24 },
+      { wch: 22 }
+    ];
+
+    // FEUILLE 2 — PASSAGE EN LISSES
+    const threadingRows = [
+      ['Fil', 'Cadre', 'Couleur', 'Code hex']
+    ];
+
+    draft.threading.forEach((shaft, i) => {
+      const color = palette[
+        draft.warpColors[i]
+      ] || palette[0];
+
+      threadingRows.push([
+        i + 1,
+        shaft + 1,
+        color.name,
+        color.hex
+      ]);
+    });
+
+    const threadingSheet = addSheet(
+      'Passage en lisses',
+      threadingRows
+    );
+
+    threadingSheet['!cols'] = [
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 22 },
+      { wch: 16 }
+    ];
+
+    // FEUILLE 3 — ATTACHAGE
+    const tieUpRows = [
+      ['Cadre / Pédale',
+        ...Array.from(
+          { length: draft.pedals },
+          (_, p) => 'P' + (p + 1)
+        )
+      ]
+    ];
+
+    draft.tieUp.forEach((row, shaft) => {
+      tieUpRows.push([
+        'Cadre ' + (shaft + 1),
+        ...row.map(active => active ? 1 : 0)
+      ]);
+    });
+
+    const tieUpSheet = addSheet(
+      'Attachage',
+      tieUpRows
+    );
+
+    tieUpSheet['!cols'] = [
+      { wch: 18 },
+      ...Array(draft.pedals).fill({ wch: 8 })
+    ];
+
+    // FEUILLE 4 — MARCHURE
+    const treadlingRows = [
+      [
+        'Duite',
+        ...Array.from(
+          { length: draft.pedals },
+          (_, p) => 'P' + (p + 1)
+        ),
+        'Couleur',
+        'Code hex'
+      ]
+    ];
+
+    draft.treadling.forEach((row, pick) => {
+      const color = palette[
+        draft.weftColors[pick]
+      ] || palette[0];
+
+      treadlingRows.push([
+        pick + 1,
+        ...row.map(active => active ? 1 : 0),
+        color.name,
+        color.hex
+      ]);
+    });
+
+    const treadlingSheet = addSheet(
+      'Marchure',
+      treadlingRows
+    );
+
+    treadlingSheet['!cols'] = [
+      { wch: 12 },
+      ...Array(draft.pedals).fill({ wch: 8 }),
+      { wch: 22 },
+      { wch: 16 }
+    ];
+
+    // FEUILLE 5 — DESSIN DU TISSU
+    const drawdownRows = [
+      [
+        'Duite / Fil',
+        ...draft.threading.map(
+          (_, i) => i + 1
+        )
+      ]
+    ];
+
+    // Calcul des cadres actionnés pour chaque duite
+    draft.treadling.forEach((pressed, pick) => {
+      const connectedShafts = Array.from(
+        { length: draft.shafts },
+        (_, shaft) => pressed.some(
+          (active, pedal) =>
+            active && draft.tieUp[shaft][pedal]
+        )
+      );
+
+      const row = [pick + 1];
+
+      draft.threading.forEach((shaft, end) => {
+        const connected = connectedShafts[shaft];
+
+        const warpVisible =
+          draft.mode === 'rising'
+            ? connected
+            : !connected;
+
+        const colorIndex = warpVisible
+          ? draft.warpColors[end]
+          : draft.weftColors[pick];
+
+        // C = chaîne visible
+        // T = trame visible
+        // Le code hex permet de retrouver la couleur
+        const face = warpVisible ? 'C' : 'T';
+        const hex = (
+          palette[colorIndex] || palette[0]
+        ).hex;
+
+        row.push(face + ' ' + hex);
+      });
+
+      drawdownRows.push(row);
+    });
+
+    const drawdownSheet = addSheet(
+      'Dessin du tissu',
+      drawdownRows
+    );
+
+    drawdownSheet['!cols'] = [
+      { wch: 16 },
+      ...draft.threading.map(() => ({ wch: 12 }))
+    ];
+
+    // Génération du fichier Excel
+    const filename = (
+      draft.name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') ||
+      'patron-tissage'
+    ) + '.xlsx';
+
+    XLSX.writeFile(workbook, filename, {
+      bookType: 'xlsx',
+      compression: true
+    });
+
+    notify('Export Excel lancé : ' + filename);
+
+  } catch (error) {
+    notify(
+      'Erreur export Excel : ' + error.message
+    );
+  }
+}
+
+$('exportExcel').addEventListener(
+  'click',
+  exportWeavingExcel
+);
+
+
+
