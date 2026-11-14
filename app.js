@@ -1283,12 +1283,20 @@ function exportWeavingExcel() {
       ]
     ];
 
-    draft.tieUp.forEach((row, shaft) => {
+    
+    for (
+          let shaft = draft.shafts - 1;
+          shaft >= 0;
+          shaft--
+    ) {
+      const row = draft.tieUp[shaft];
+
       tieUpRows.push([
         'Cadre ' + (shaft + 1),
         ...row.map(active => active ? 1 : 0)
       ]);
-    });
+    }
+
 
     const tieUpSheet = addSheet(
       'Attachage',
