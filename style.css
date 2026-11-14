@@ -62,3 +62,44 @@
   margin-top: 16px;
 }
 
+
+/* SESSION 9 — Bibliothèque */
+
+.library-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.library-item strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.library-item small {
+  display: block;
+  color: #666;
+}
+
+.library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.library-actions button {
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+#libraryMessage {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #29483c;
+}
+
+
