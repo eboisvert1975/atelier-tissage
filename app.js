@@ -244,7 +244,10 @@ function renderMatrix(targetId, matrix, rowLabel, columnPrefix, onToggle) {
         h.textContent = `${columnPrefix}${p + 1}`;
         grid.append(h)
     }
-    matrix.forEach((row, r) => {
+    
+    matrix.map((row, r) => ({
+          row, r})).reverse().forEach(({ row, r }) => {
+
         const h = document.createElement('div');
         h.className = 'rowhead';
         h.textContent = `${rowLabel} ${r + 1}`;
