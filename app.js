@@ -729,7 +729,13 @@ function renderRealisticPreview(board) {
     ctx.fillStyle = '#d6d1c7';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dessiner la chaîne et la trame continues.
+    
+    // SESSION 18 — Fond et fils continus
+    ctx.fillStyle = '#d6d1c7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Dessiner d'abord les fils de chaîne,
+    // qui constituent la couche inférieure.
     for (let end = 0; end < ends; end++) {
         roundedThread(
             end * size + 1,
@@ -741,16 +747,41 @@ function renderRealisticPreview(board) {
         );
     }
 
+    // Dessiner les segments de trame visibles.
+    // Une séquence de croisements consécutifs
+    // est représentée par un seul fil horizontal.
     for (let pick = 0; pick < picks; pick++) {
-        roundedThread(
-            0,
-            pick * size + 1,
-            ends * size,
-            size - 2,
-            palette[draft.weftColors[pick]].hex,
-            false
-        );
+        let end = 0;
+
+        while (end < ends) {
+            if (warpUp(draft.threading[end], pick)) {
+                end++;
+                continue;
+            }
+
+            const startEnd = end;
+
+            while (
+                end < ends &&
+                !warpUp(draft.threading[end], pick)
+            ) {
+                end++;
+            }
+
+            const runLength = end - startEnd;
+
+            roundedThread(
+                startEnd * size - 1,
+                pick * size + 1,
+                runLength * size + 2,
+                size - 2,
+                palette[draft.weftColors[pick]].hex,
+                false
+            );
+        }
     }
+
+
 
     
     
