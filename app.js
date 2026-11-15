@@ -509,19 +509,42 @@ function ovButton(active, label, callback) {
     b.addEventListener('click', callback);
     return b;
 }
+
 function renderOverview() {
     const board = $('overviewBoard');
-    if (!board)
-        return;
-    board.replaceChildren();
-    board.style.setProperty('--cell', overviewCellSize + 'px');
-    const ends = draft.threading.length,
-    picks = draft.treadling.length;
-    // Passage en lisses : rangées de cadres, colonnes de fils.
-    
-    // PASSAGE EN LISSES
-    // Cadre 1 en bas, cadre 4 ou 8 en haut.
+    if (!board) return;
 
+    board.replaceChildren();
+    board.style.setProperty(
+        '--cell',
+        overviewCellSize + 'px'
+    );
+
+    const ends = draft.threading.length;
+    const picks = draft.treadling.length;
+
+    const shaftLabels = Array.from(
+        { length: draft.shafts },
+        (_, r) => draft.shafts - r
+    );
+
+    const endLabels = Array.from(
+        { length: ends },
+        (_, i) => i + 1
+    );
+
+    const pedalLabels = Array.from(
+        { length: draft.pedals },
+        (_, i) => i + 1
+    );
+
+    const pickLabels = Array.from(
+        { length: picks },
+        (_, i) => i + 1
+    );
+
+    // PASSAGE EN LISSES
+    // Cadre 1 en bas.
     makeOverviewGrid(
         board,
         draft.shafts,
@@ -538,14 +561,13 @@ function renderOverview() {
                 }
             );
         },
-        'Passage en lisses (cadres × fils)'
+        'Passage en lisses (cadres × fils)',
+        shaftLabels,
+        endLabels
     );
 
-    // Attachage : rangées de cadres, colonnes de pédales.
-    
     // ATTACHAGE
-    // Cadre 1 en bas, cadre 4 ou 8 en haut.
-
+    // Cadre 1 en bas.
     makeOverviewGrid(
         board,
         draft.shafts,
@@ -559,29 +581,68 @@ function renderOverview() {
                 () => {
                     draft.tieUp[shaft][c] =
                         !draft.tieUp[shaft][c];
-
                     changed('Attachage modifié.');
                 }
             );
         },
-        'Attachage (cadres × pédales)'
+        'Attachage (cadres × pédales)',
+        shaftLabels,
+        pedalLabels
     );
 
-    makeOverviewGrid(board, picks, ends, (r, c) => {
-        const cell = document.createElement('div');
-        cell.className = 'ov-cell';
-        const above = warpUp(draft.threading[c], r);
-        cell.style.background = palette[above ? draft.warpColors[c] : draft.weftColors[r]].hex;
-        cell.title = `Duite ${r + 1}, fil ${c + 1} : ${above ? 'chaîne' : 'trame'} visible`;
-        return cell;
-    }, 'Dessin du tissu (duites × fils)');
-    makeOverviewGrid(board, picks, draft.pedals, (r, c) => ovButton(
-            draft.treadling[r][c], `Duite ${r + 1}, pédale ${c + 1}`,
+    // DESSIN DU TISSU
+    makeOverviewGrid(
+        board,
+        picks,
+        ends,
+        (r, c) => {
+            const cell = document.createElement('div');
+            cell.className = 'ov-cell';
+
+            const above = warpUp(
+                draft.threading[c],
+                r
+            );
+
+            cell.style.background =
+                palette[
+                    above
+                        ? draft.warpColors[c]
+                        : draft.weftColors[r]
+                ].hex;
+
+            cell.title =
+                `Duite ${r + 1}, fil ${c + 1} : ` +
+                (above ? 'chaîne' : 'trame') +
+                ' visible';
+
+            return cell;
+        },
+        'Dessin du tissu (duites × fils)',
+        pickLabels,
+        endLabels
+    );
+
+    // MARCHURE
+    makeOverviewGrid(
+        board,
+        picks,
+        draft.pedals,
+        (r, c) => ovButton(
+            draft.treadling[r][c],
+            `Duite ${r + 1}, pédale ${c + 1}`,
             () => {
-            draft.treadling[r][c] = !draft.treadling[r][c];
-            changed('Marchure modifiée.')
-        }), 'Marchure (duites × pédales)');
+                draft.treadling[r][c] =
+                    !draft.treadling[r][c];
+                changed('Marchure modifiée.');
+            }
+        ),
+        'Marchure (duites × pédales)',
+        pickLabels,
+        pedalLabels
+    );
 }
+
 $('zoomControl').addEventListener('input', e => {
     overviewCellSize = Number(e.target.value);
     renderOverview()
