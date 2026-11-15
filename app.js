@@ -1250,16 +1250,13 @@ function exportWeavingExcel() {
 
     
     draft.threading.forEach(threadedShaft => {
-      const correctedShaft =
-        draft.shafts - 1 - threadedShaft;
-
-         row.push(
-        correctedShaft === shaft ? '■' : ''
-      );
-    });
+  row.push(
+    threadedShaft === shaft ? '■' : ''
+  );
+});
 
 
-         threadingRows.push([
+    threadingRows.push([
         i + 1,
         shaft + 1,
         color.name,
