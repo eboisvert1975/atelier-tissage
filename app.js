@@ -1248,12 +1248,18 @@ function exportWeavingExcel() {
       ['Fil', 'Cadre', 'Couleur', 'Code hex']
     ];
 
-    draft.threading.forEach((shaft, i) => {
-      const color = palette[
-        draft.warpColors[i]
-      ] || palette[0];
+    
+    draft.threading.forEach(threadedShaft => {
+      const correctedShaft =
+        draft.shafts - 1 - threadedShaft;
 
-      threadingRows.push([
+         row.push(
+        correctedShaft === shaft ? '■' : ''
+      );
+    });
+
+
+         threadingRows.push([
         i + 1,
         shaft + 1,
         color.name,
