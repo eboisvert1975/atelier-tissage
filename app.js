@@ -450,20 +450,56 @@ $('importFile').addEventListener('change', async e => {
 
 // Vue quadrillée complète : même modèle de données que les autres onglets.
 let overviewCellSize = 24;
-function makeOverviewGrid(parent, rows, cols, cellFn, title) {
+
+function makeOverviewGrid(
+    parent, rows, cols, cellFn, title,
+    rowLabels = [], columnLabels = []
+) {
     const section = document.createElement('div');
+
     const heading = document.createElement('p');
     heading.className = 'overview-title';
     heading.textContent = title;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'overview-labeled';
+
     const grid = document.createElement('div');
     grid.className = 'overview-part';
-    grid.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
-    for (let r = 0; r < rows; r++)
-        for (let c = 0; c < cols; c++)
+
+    grid.style.gridTemplateColumns =
+        `44px repeat(${cols}, var(--cell))`;
+
+    // Coin supérieur gauche
+    const corner = document.createElement('div');
+    corner.className = 'overview-label';
+    grid.append(corner);
+
+    // Numéros des colonnes
+    for (let c = 0; c < cols; c++) {
+        const label = document.createElement('div');
+        label.className = 'overview-label';
+        label.textContent = columnLabels[c] ?? (c + 1);
+        grid.append(label);
+    }
+
+    // Numéros des lignes et cellules
+    for (let r = 0; r < rows; r++) {
+        const label = document.createElement('div');
+        label.className = 'overview-label';
+        label.textContent = rowLabels[r] ?? (r + 1);
+        grid.append(label);
+
+        for (let c = 0; c < cols; c++) {
             grid.append(cellFn(r, c));
-    section.append(heading, grid);
+        }
+    }
+
+    wrapper.append(grid);
+    section.append(heading, wrapper);
     parent.append(section);
 }
+
 function ovButton(active, label, callback) {
     const b = document.createElement('button');
     b.type = 'button';
