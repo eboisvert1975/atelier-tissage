@@ -103,3 +103,45 @@
 }
 
 
+
+/* SESSION 12 — Numérotation des grilles */
+
+.overview-labeled {
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: 8px;
+}
+
+.overview-label {
+    width: 100%;
+    height: var(--cell);
+    min-height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #29483c;
+    background: #e8eee9;
+    border: 1px solid #c6d1c9;
+    box-sizing: border-box;
+}
+
+.overview-part {
+    display: grid;
+    gap: 0;
+    width: max-content;
+    align-items: stretch;
+}
+
+.overview-part > button,
+.overview-part > .ov-cell {
+    width: var(--cell);
+    height: var(--cell);
+    min-width: var(--cell);
+    min-height: var(--cell);
+    box-sizing: border-box;
+}
+
+
+
