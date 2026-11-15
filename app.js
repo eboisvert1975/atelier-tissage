@@ -781,22 +781,30 @@ function renderRealisticPreview(board) {
             ctx.fillStyle = color;
             ctx.beginPath();
 
-            // Courbes douces sur les côtés
+            
+            // Contour arrondi sans croisement
             ctx.moveTo(x + w * 0.15, y);
-            ctx.quadraticCurveTo(
-                x - w * 0.08,
-                y + h * 0.5,
-                x + w * 0.15,
-                y + h
-            );
 
+            // Bord supérieur
             ctx.lineTo(x + w * 0.85, y);
 
+            // Côté droit légèrement bombé
             ctx.quadraticCurveTo(
                 x + w * 1.08,
                 y + h * 0.5,
                 x + w * 0.85,
                 y + h
+            );
+
+            // Bord inférieur
+            ctx.lineTo(x + w * 0.15, y + h);
+
+            // Côté gauche légèrement bombé
+            ctx.quadraticCurveTo(
+                x - w * 0.08,
+                y + h * 0.5,
+                x + w * 0.15,
+                y
             );
 
             ctx.closePath();
