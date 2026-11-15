@@ -652,6 +652,7 @@ function renderOverview() {
 /* SESSION 14 — Entrelacement réaliste */
 
 let realisticView = false;
+let threadStyle = 'traditional';
 
 function renderRealisticPreview(board) {
     const section = document.createElement('div');
@@ -670,6 +671,37 @@ function renderRealisticPreview(board) {
     });
 
     section.append(button);
+    
+    // SESSION 19 — Choix du style d'entrelacement
+    if (realisticView) {
+        const styleControls = document.createElement('div');
+        styleControls.className = 'thread-style-controls';
+
+        const label = document.createElement('label');
+        label.textContent = 'Style des fils :';
+
+        const select = document.createElement('select');
+
+        const traditional = document.createElement('option');
+        traditional.value = 'traditional';
+        traditional.textContent = 'Tissage traditionnel';
+
+        const realistic = document.createElement('option');
+        realistic.value = 'realistic';
+        realistic.textContent = 'Tissage réaliste';
+
+        select.append(traditional, realistic);
+        select.value = threadStyle;
+
+        select.addEventListener('change', () => {
+            threadStyle = select.value;
+            renderOverview();
+        });
+
+        styleControls.append(label, select);
+        section.append(styleControls);
+    }
+
 
     if (!realisticView) {
         board.append(section);
@@ -696,10 +728,19 @@ function renderRealisticPreview(board) {
         const radius = 0;
 
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.35)';
-        ctx.shadowBlur = 3;
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 2;
+        
+        if (threadStyle === 'realistic') {
+            ctx.shadowColor = 'rgba(0,0,0,0.42)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 2;
+        } else {
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 2;
+        }
+
 
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -713,12 +754,22 @@ function renderRealisticPreview(board) {
             ? ctx.createLinearGradient(x, y, x + w, y)
             : ctx.createLinearGradient(x, y, x, y + h);
 
-        gradient.addColorStop(0, 'rgba(0,0,0,0.30)');
-        gradient.addColorStop(0.18, 'rgba(255,255,255,0.08)');
-        gradient.addColorStop(0.42, 'rgba(255,255,255,0.34)');
-        gradient.addColorStop(0.62, 'rgba(255,255,255,0.20)');
-        gradient.addColorStop(0.85, 'rgba(0,0,0,0.08)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0.32)');
+        
+        if (threadStyle === 'realistic') {
+            gradient.addColorStop(0, 'rgba(0,0,0,0.38)');
+            gradient.addColorStop(0.20, 'rgba(255,255,255,0.06)');
+            gradient.addColorStop(0.45, 'rgba(255,255,255,0.42)');
+            gradient.addColorStop(0.65, 'rgba(255,255,255,0.18)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.38)');
+        } else {
+            gradient.addColorStop(0, 'rgba(0,0,0,0.30)');
+            gradient.addColorStop(0.18, 'rgba(255,255,255,0.08)');
+            gradient.addColorStop(0.42, 'rgba(255,255,255,0.34)');
+            gradient.addColorStop(0.62, 'rgba(255,255,255,0.20)');
+            gradient.addColorStop(0.85, 'rgba(0,0,0,0.08)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.32)');
+        }
+
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
