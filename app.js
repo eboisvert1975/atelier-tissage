@@ -679,6 +679,7 @@ function renderRealisticPreview(board) {
     const ends = Math.min(draft.threading.length, 160);
     const picks = Math.min(draft.treadling.length, 160);
     const size = 16;
+    const zoom = window.realisticZoom || 100;
 
     const canvas = document.createElement('canvas');
     canvas.width = ends * size;
@@ -695,10 +696,10 @@ function renderRealisticPreview(board) {
         const radius = Math.min(w, h) * 0.28;
 
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.28)';
-        ctx.shadowBlur = 2;
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 3;
         ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
+        ctx.shadowOffsetY = 2;
 
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -712,10 +713,12 @@ function renderRealisticPreview(board) {
             ? ctx.createLinearGradient(x, y, x + w, y)
             : ctx.createLinearGradient(x, y, x, y + h);
 
-        gradient.addColorStop(0, 'rgba(0,0,0,0.18)');
-        gradient.addColorStop(0.35, 'rgba(255,255,255,0.25)');
-        gradient.addColorStop(0.7, 'rgba(255,255,255,0.10)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0.22)');
+        gradient.addColorStop(0, 'rgba(0,0,0,0.30)');
+        gradient.addColorStop(0.18, 'rgba(255,255,255,0.08)');
+        gradient.addColorStop(0.42, 'rgba(255,255,255,0.34)');
+        gradient.addColorStop(0.62, 'rgba(255,255,255,0.20)');
+        gradient.addColorStop(0.85, 'rgba(0,0,0,0.08)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0.32)');
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -765,6 +768,41 @@ function renderRealisticPreview(board) {
             }
         }
     }
+
+
+    // SESSION 15 — Zoom de l'entrelacement
+    const zoomControls = document.createElement('div');
+    zoomControls.className = 'realistic-zoom-controls';
+
+    const zoomLabel = document.createElement('label');
+    zoomLabel.textContent = `Zoom : ${zoom} %`;
+
+    const zoomSlider = document.createElement('input');
+    zoomSlider.type = 'range';
+    zoomSlider.min = '50';
+    zoomSlider.max = '300';
+    zoomSlider.step = '25';
+    zoomSlider.value = zoom;
+
+    zoomSlider.addEventListener('input', () => {
+        const value = Number(zoomSlider.value);
+        window.realisticZoom = value;
+        zoomLabel.textContent = `Zoom : ${value} %`;
+
+        canvas.style.width =
+            (canvas.width * value / 100) + 'px';
+        canvas.style.height =
+            (canvas.height * value / 100) + 'px';
+    });
+
+    zoomControls.append(zoomLabel, zoomSlider);
+    section.append(zoomControls);
+
+    canvas.style.width =
+        (canvas.width * zoom / 100) + 'px';
+    canvas.style.height =
+        (canvas.height * zoom / 100) + 'px';
+
 
     const scroll = document.createElement('div');
     scroll.className = 'realistic-scroll';
