@@ -482,12 +482,29 @@ function renderOverview() {
     const ends = draft.threading.length,
     picks = draft.treadling.length;
     // Passage en lisses : rangées de cadres, colonnes de fils.
-    makeOverviewGrid(board, draft.shafts, ends, (r, c) => ovButton(
-            draft.threading[c] === r, `Fil ${c + 1}, cadre ${r + 1}`,
-            () => {
-            draft.threading[c] = r;
-            changed('Passage modifié.')
-        }), 'Passage en lisses (cadres × fils)');
+    
+    // PASSAGE EN LISSES
+    // Cadre 1 en bas, cadre 4 ou 8 en haut.
+
+    makeOverviewGrid(
+        board,
+        draft.shafts,
+        ends,
+        (r, c) => {
+            const shaft = draft.shafts - 1 - r;
+
+            return ovButton(
+                draft.threading[c] === shaft,
+                `Fil ${c + 1}, cadre ${shaft + 1}`,
+                () => {
+                    draft.threading[c] = shaft;
+                    changed('Passage modifié.');
+                }
+            );
+        },
+        'Passage en lisses (cadres × fils)'
+    );
+
     // Attachage : rangées de cadres, colonnes de pédales.
     makeOverviewGrid(board, draft.shafts, draft.pedals, (r, c) => ovButton(
             draft.tieUp[r][c], `Cadre ${r + 1}, pédale ${c + 1}`,
