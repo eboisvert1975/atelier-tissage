@@ -262,3 +262,26 @@
     accent-color: #476c59;
 }
 
+
+/* SESSION 19 — Styles d'entrelacement */
+
+.thread-style-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.thread-style-controls label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.thread-style-controls select {
+    padding: 8px 12px;
+    border: 1px solid #b9c8bd;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+}
