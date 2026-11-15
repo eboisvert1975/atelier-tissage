@@ -693,7 +693,7 @@ function renderRealisticPreview(board) {
 
     // Forme d'un fil légèrement arrondi.
     function roundedThread(x, y, w, h, color, vertical) {
-        const radius = Math.min(w, h) * 0.28;
+        const radius = 0;
 
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.35)';
