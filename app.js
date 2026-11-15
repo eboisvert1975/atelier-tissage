@@ -515,6 +515,10 @@ function renderOverview() {
     if (!board) return;
 
     board.replaceChildren();
+    
+    // SESSION 13 — Disposition traditionnelle
+    board.classList.add('traditional-board');
+
     board.style.setProperty(
         '--cell',
         overviewCellSize + 'px'
