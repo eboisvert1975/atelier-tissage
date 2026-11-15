@@ -645,7 +645,146 @@ function renderOverview() {
         pickLabels,
         pedalLabels
     );
+    renderRealisticPreview(board);
 }
+
+
+/* SESSION 14 — Entrelacement réaliste */
+
+let realisticView = false;
+
+function renderRealisticPreview(board) {
+    const section = document.createElement('div');
+    section.className = 'realistic-section';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'secondary';
+    button.textContent = realisticView
+        ? 'Masquer les fils entrelacés'
+        : 'Voir les fils entrelacés';
+
+    button.addEventListener('click', () => {
+        realisticView = !realisticView;
+        renderOverview();
+    });
+
+    section.append(button);
+
+    if (!realisticView) {
+        board.append(section);
+        return;
+    }
+
+    const ends = Math.min(draft.threading.length, 160);
+    const picks = Math.min(draft.treadling.length, 160);
+    const size = 16;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = ends * size;
+    canvas.height = picks * size;
+
+    canvas.style.display = 'block';
+    canvas.style.marginTop = '12px';
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Forme d'un fil légèrement arrondi.
+    function roundedThread(x, y, w, h, color, vertical) {
+        const radius = Math.min(w, h) * 0.28;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.28)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, radius);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Reflet doux pour simuler le relief.
+        const gradient = vertical
+            ? ctx.createLinearGradient(x, y, x + w, y)
+            : ctx.createLinearGradient(x, y, x, y + h);
+
+        gradient.addColorStop(0, 'rgba(0,0,0,0.18)');
+        gradient.addColorStop(0.35, 'rgba(255,255,255,0.25)');
+        gradient.addColorStop(0.7, 'rgba(255,255,255,0.10)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0.22)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, radius);
+        ctx.fill();
+    }
+
+    ctx.fillStyle = '#d6d1c7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Dessiner la chaîne et la trame continues.
+    for (let end = 0; end < ends; end++) {
+        roundedThread(
+            end * size + 1,
+            0,
+            size - 2,
+            picks * size,
+            palette[draft.warpColors[end]].hex,
+            true
+        );
+    }
+
+    for (let pick = 0; pick < picks; pick++) {
+        roundedThread(
+            0,
+            pick * size + 1,
+            ends * size,
+            size - 2,
+            palette[draft.weftColors[pick]].hex,
+            false
+        );
+    }
+
+    // Dessiner les fils de chaîne par-dessus
+    // lorsqu'ils sont levés dans le tissu.
+    for (let pick = 0; pick < picks; pick++) {
+        for (let end = 0; end < ends; end++) {
+            if (warpUp(draft.threading[end], pick)) {
+                roundedThread(
+                    end * size + 1,
+                    pick * size - 1,
+                    size - 2,
+                    size + 2,
+                    palette[draft.warpColors[end]].hex,
+                    true
+                );
+            }
+        }
+    }
+
+    const scroll = document.createElement('div');
+    scroll.className = 'realistic-scroll';
+    scroll.append(canvas);
+    section.append(scroll);
+
+    if (
+        draft.threading.length > 160 ||
+        draft.treadling.length > 160
+    ) {
+        const note = document.createElement('p');
+        note.textContent =
+            'Aperçu limité aux 160 premiers fils ' +
+            'et aux 160 premières duites.';
+        section.append(note);
+    }
+
+    board.append(section);
+}
+
 
 $('zoomControl').addEventListener('input', e => {
     overviewCellSize = Number(e.target.value);
