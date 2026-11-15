@@ -235,3 +235,30 @@
     color: #68756e;
 }
 
+
+
+/* SESSION 15 — Zoom réaliste */
+
+.realistic-zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    padding: 10px 12px;
+    background: #edf1ec;
+    border-radius: 8px;
+}
+
+.realistic-zoom-controls label {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 95px;
+}
+
+.realistic-zoom-controls input[type="range"] {
+    flex: 1;
+    min-width: 130px;
+    accent-color: #476c59;
+}
+
