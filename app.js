@@ -1243,26 +1243,33 @@ function exportWeavingExcel() {
       { wch: 22 }
     ];
 
+    
     // FEUILLE 2 — PASSAGE EN LISSES
+    // Cadre 1 en bas, cadre 4 ou 8 en haut.
+
     const threadingRows = [
-      ['Fil', 'Cadre', 'Couleur', 'Code hex']
+      [
+        'Cadre / Fil',
+        ...draft.threading.map((_, i) => i + 1)
+      ]
     ];
 
-    
-    draft.threading.forEach(threadedShaft => {
-  row.push(
-    threadedShaft === shaft ? '■' : ''
-  );
-});
+    // Construire les lignes de haut en bas.
+    for (
+      let shaft = draft.shafts - 1;
+      shaft >= 0;
+      shaft--
+    ) {
+      const row = ['Cadre ' + (shaft + 1)];
 
+      draft.threading.forEach(threadedShaft => {
+        row.push(
+          threadedShaft === shaft ? '■' : ''
+        );
+      });
 
-    threadingRows.push([
-        i + 1,
-        shaft + 1,
-        color.name,
-        color.hex
-      ]);
-    });
+      threadingRows.push(row);
+    }
 
     const threadingSheet = addSheet(
       'Passage en lisses',
@@ -1270,10 +1277,8 @@ function exportWeavingExcel() {
     );
 
     threadingSheet['!cols'] = [
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 22 },
-      { wch: 16 }
+      { wch: 16 },
+      ...draft.threading.map(() => ({ wch: 5 }))
     ];
 
 
