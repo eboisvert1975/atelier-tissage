@@ -724,6 +724,72 @@ function renderRealisticPreview(board) {
     if (!ctx) return;
 
     // Forme d'un fil légèrement arrondi.
+    
+    // SESSION 20 — Ondulations douces
+    // Déformation limitée au mode réaliste.
+    function threadWave(x, y, w, h, vertical) {
+        const amplitude = 0.65;
+        const steps = Math.max(
+            8,
+            Math.ceil((vertical ? h : w) / 4)
+        );
+
+        ctx.beginPath();
+
+        if (vertical) {
+            // Bord gauche, de haut en bas
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const yy = y + h * t;
+                const wave = Math.sin(t * Math.PI * 4)
+                    * amplitude;
+
+                if (i === 0) {
+                    ctx.moveTo(x + wave, yy);
+                } else {
+                    ctx.lineTo(x + wave, yy);
+                }
+            }
+
+            // Bord droit, de bas en haut
+            for (let i = steps; i >= 0; i--) {
+                const t = i / steps;
+                const yy = y + h * t;
+                const wave = Math.sin(t * Math.PI * 4)
+                    * amplitude;
+
+                ctx.lineTo(x + w + wave, yy);
+            }
+        } else {
+            // Bord supérieur, de gauche à droite
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const xx = x + w * t;
+                const wave = Math.sin(t * Math.PI * 4)
+                    * amplitude;
+
+                if (i === 0) {
+                    ctx.moveTo(xx, y + wave);
+                } else {
+                    ctx.lineTo(xx, y + wave);
+                }
+            }
+
+            // Bord inférieur, de droite à gauche
+            for (let i = steps; i >= 0; i--) {
+                const t = i / steps;
+                const xx = x + w * t;
+                const wave = Math.sin(t * Math.PI * 4)
+                    * amplitude;
+
+                ctx.lineTo(xx, y + h + wave);
+            }
+        }
+
+        ctx.closePath();
+    }
+
+
     function roundedThread(x, y, w, h, color, vertical) {
         const radius = 0;
 
@@ -742,10 +808,18 @@ function renderRealisticPreview(board) {
         }
 
 
+        
         ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.roundRect(x, y, w, h, radius);
+
+        if (threadStyle === 'realistic') {
+            threadWave(x, y, w, h, vertical);
+        } else {
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, radius);
+        }
+
         ctx.fill();
+
 
         ctx.restore();
 
@@ -771,10 +845,18 @@ function renderRealisticPreview(board) {
         }
 
 
+        
         ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(x, y, w, h, radius);
+
+        if (threadStyle === 'realistic') {
+            threadWave(x, y, w, h, vertical);
+        } else {
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, radius);
+        }
+
         ctx.fill();
+
     }
 
     ctx.fillStyle = '#d6d1c7';
