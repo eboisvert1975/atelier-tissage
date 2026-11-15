@@ -725,69 +725,66 @@ function renderRealisticPreview(board) {
 
     // Forme d'un fil légèrement arrondi.
     
-    // SESSION 20 — Ondulations douces
-    // Déformation limitée au mode réaliste.
+    
+    // SESSION 21 — Ondulations liées aux croisements
     function threadWave(x, y, w, h, vertical) {
-        const amplitude = 0.65;
+        const amplitude = 0.55;
         const steps = Math.max(
             8,
-            Math.ceil((vertical ? h : w) / 4)
+            Math.ceil((vertical ? h : w) / 3)
         );
+
+        const length = vertical ? h : w;
+        const start = vertical ? y : x;
+
+        // Ondulation synchronisée sur la grille du tissu.
+        // Les segments voisins partagent la même courbe.
+        function offset(position) {
+            const phase =
+                (position / size) * Math.PI * 2;
+
+            return Math.sin(phase) * amplitude;
+        }
 
         ctx.beginPath();
 
         if (vertical) {
-            // Bord gauche, de haut en bas
             for (let i = 0; i <= steps; i++) {
-                const t = i / steps;
-                const yy = y + h * t;
-                const wave = Math.sin(t * Math.PI * 4)
-                    * amplitude;
+                const yy = y + length * i / steps;
+                const xx = x + offset(yy);
 
-                if (i === 0) {
-                    ctx.moveTo(x + wave, yy);
-                } else {
-                    ctx.lineTo(x + wave, yy);
-                }
+                if (i === 0) ctx.moveTo(xx, yy);
+                else ctx.lineTo(xx, yy);
             }
 
-            // Bord droit, de bas en haut
             for (let i = steps; i >= 0; i--) {
-                const t = i / steps;
-                const yy = y + h * t;
-                const wave = Math.sin(t * Math.PI * 4)
-                    * amplitude;
-
-                ctx.lineTo(x + w + wave, yy);
+                const yy = y + length * i / steps;
+                ctx.lineTo(
+                    x + w + offset(yy),
+                    yy
+                );
             }
         } else {
-            // Bord supérieur, de gauche à droite
             for (let i = 0; i <= steps; i++) {
-                const t = i / steps;
-                const xx = x + w * t;
-                const wave = Math.sin(t * Math.PI * 4)
-                    * amplitude;
+                const xx = x + length * i / steps;
+                const yy = y + offset(xx);
 
-                if (i === 0) {
-                    ctx.moveTo(xx, y + wave);
-                } else {
-                    ctx.lineTo(xx, y + wave);
-                }
+                if (i === 0) ctx.moveTo(xx, yy);
+                else ctx.lineTo(xx, yy);
             }
 
-            // Bord inférieur, de droite à gauche
             for (let i = steps; i >= 0; i--) {
-                const t = i / steps;
-                const xx = x + w * t;
-                const wave = Math.sin(t * Math.PI * 4)
-                    * amplitude;
-
-                ctx.lineTo(xx, y + h + wave);
+                const xx = x + length * i / steps;
+                ctx.lineTo(
+                    xx,
+                    y + h + offset(xx)
+                );
             }
         }
 
         ctx.closePath();
     }
+
 
 
     function roundedThread(x, y, w, h, color, vertical) {
@@ -954,14 +951,56 @@ function renderRealisticPreview(board) {
 
             // Un seul segment continu pour
             // plusieurs croisements consécutifs.
-            roundedThread(
-                x,
-                y,
-                w,
-                h,
-                color,
-                true
-            );
+            
+            // Dessin continu de la chaîne visible.
+            roundedThread(x, y, w, h, color, true);
+
+            // Ombre douce au début et à la fin
+            // de chaque passage au-dessus.
+            if (threadStyle === 'realistic') {
+                ctx.save();
+
+                const edge = Math.min(3, h / 4);
+
+                const topShadow =
+                    ctx.createLinearGradient(
+                        0, y, 0, y + edge
+                    );
+
+                topShadow.addColorStop(
+                    0, 'rgba(0,0,0,0.20)'
+                );
+                topShadow.addColorStop(
+                    1, 'rgba(0,0,0,0)'
+                );
+
+                ctx.fillStyle = topShadow;
+                ctx.fillRect(x, y, w, edge);
+
+                const bottomShadow =
+                    ctx.createLinearGradient(
+                        0, y + h - edge,
+                        0, y + h
+                    );
+
+                bottomShadow.addColorStop(
+                    0, 'rgba(0,0,0,0)'
+                );
+                bottomShadow.addColorStop(
+                    1, 'rgba(0,0,0,0.20)'
+                );
+
+                ctx.fillStyle = bottomShadow;
+                ctx.fillRect(
+                    x,
+                    y + h - edge,
+                    w,
+                    edge
+                );
+
+                ctx.restore();
+            }
+
         }
     }
 
