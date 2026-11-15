@@ -1273,32 +1273,41 @@ function exportWeavingExcel() {
       { wch: 16 }
     ];
 
+
     // FEUILLE 3 — ATTACHAGE
+    // Cadre 1 en bas, dernier cadre en haut.
+    // Pédales de gauche à droite.
+
     const tieUpRows = [
-      ['Cadre / Pédale',
+      [
+        'Cadre / Pédale',
         ...Array.from(
           { length: draft.pedals },
-          (_, p) => 'P' + (p + 1)
+          (_, pedal) => 'P' + (pedal + 1)
         )
       ]
     ];
 
-    
     for (
-          let shaft = draft.shafts - 1;
-          shaft >= 0;
-          shaft--
+      let shaft = draft.shafts - 1;
+      shaft >= 0;
+      shaft--
     ) {
-      const row = draft.tieUp[shaft];
+      const row = ['Cadre ' + (shaft + 1)];
 
-      tieUpRows.push([
-        'Cadre ' + (shaft + 1),
-        ...row.map(active => active ? 1 : 0)
-      ]);
+      for (
+        let pedal = 0;
+        pedal < draft.pedals;
+        pedal++
+      ) {
+        row.push(
+          draft.tieUp[shaft][pedal] ? '■' : ''
+        );
+      }
+
+      tieUpRows.push(row);
     }
 
-
-    
     const tieUpSheet = addSheet(
       'Attachage',
       tieUpRows
@@ -1306,8 +1315,12 @@ function exportWeavingExcel() {
 
     tieUpSheet['!cols'] = [
       { wch: 18 },
-      ...Array(draft.pedals).fill({ wch: 8 })
+      ...Array.from(
+        { length: draft.pedals },
+        () => ({ wch: 9 })
+      )
     ];
+
 
     // FEUILLE 4 — MARCHURE
     const treadlingRows = [
