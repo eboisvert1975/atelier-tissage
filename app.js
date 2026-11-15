@@ -506,12 +506,31 @@ function renderOverview() {
     );
 
     // Attachage : rangées de cadres, colonnes de pédales.
-    makeOverviewGrid(board, draft.shafts, draft.pedals, (r, c) => ovButton(
-            draft.tieUp[r][c], `Cadre ${r + 1}, pédale ${c + 1}`,
-            () => {
-            draft.tieUp[r][c] = !draft.tieUp[r][c];
-            changed('Attachage modifié.')
-        }), 'Attachage (cadres × pédales)');
+    
+    // ATTACHAGE
+    // Cadre 1 en bas, cadre 4 ou 8 en haut.
+
+    makeOverviewGrid(
+        board,
+        draft.shafts,
+        draft.pedals,
+        (r, c) => {
+            const shaft = draft.shafts - 1 - r;
+
+            return ovButton(
+                draft.tieUp[shaft][c],
+                `Cadre ${shaft + 1}, pédale ${c + 1}`,
+                () => {
+                    draft.tieUp[shaft][c] =
+                        !draft.tieUp[shaft][c];
+
+                    changed('Attachage modifié.');
+                }
+            );
+        },
+        'Attachage (cadres × pédales)'
+    );
+
     makeOverviewGrid(board, picks, ends, (r, c) => {
         const cell = document.createElement('div');
         cell.className = 'ov-cell';
