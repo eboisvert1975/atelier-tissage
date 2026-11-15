@@ -752,22 +752,93 @@ function renderRealisticPreview(board) {
         );
     }
 
-    // Dessiner les fils de chaîne par-dessus
-    // lorsqu'ils sont levés dans le tissu.
+    
+    // SESSION 16 — Courbes aux croisements
+    // Les fils de chaîne passent au-dessus
+    // selon le passage en lisses et la marchure.
+
     for (let pick = 0; pick < picks; pick++) {
         for (let end = 0; end < ends; end++) {
-            if (warpUp(draft.threading[end], pick)) {
-                roundedThread(
-                    end * size + 1,
-                    pick * size - 1,
-                    size - 2,
-                    size + 2,
-                    palette[draft.warpColors[end]].hex,
-                    true
-                );
+
+            if (!warpUp(draft.threading[end], pick)) {
+                continue;
             }
+
+            const x = end * size + 1;
+            const y = pick * size - 1;
+            const w = size - 2;
+            const h = size + 2;
+
+            const color =
+                palette[draft.warpColors[end]].hex;
+
+            // Ombre au croisement
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.38)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetY = 2;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+
+            // Courbes douces sur les côtés
+            ctx.moveTo(x + w * 0.15, y);
+            ctx.quadraticCurveTo(
+                x - w * 0.08,
+                y + h * 0.5,
+                x + w * 0.15,
+                y + h
+            );
+
+            ctx.lineTo(x + w * 0.85, y);
+
+            ctx.quadraticCurveTo(
+                x + w * 1.08,
+                y + h * 0.5,
+                x + w * 0.85,
+                y + h
+            );
+
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Reflet central du fil
+            const highlight =
+                ctx.createLinearGradient(
+                    x, y, x + w, y
+                );
+
+            highlight.addColorStop(
+                0,
+                'rgba(0,0,0,0.24)'
+            );
+            highlight.addColorStop(
+                0.4,
+                'rgba(255,255,255,0.30)'
+            );
+            highlight.addColorStop(
+                0.6,
+                'rgba(255,255,255,0.20)'
+            );
+            highlight.addColorStop(
+                1,
+                'rgba(0,0,0,0.28)'
+            );
+
+            ctx.fillStyle = highlight;
+            ctx.beginPath();
+            ctx.roundRect(
+                x + 2,
+                y + 1,
+                w - 4,
+                h - 2,
+                3
+            );
+            ctx.fill();
         }
     }
+
 
 
     // SESSION 15 — Zoom de l'entrelacement
