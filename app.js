@@ -21,6 +21,35 @@ const palette = [{
     }
 ];
 const STORAGE_KEY = 'atelier-tissage-draft-v2';
+
+
+function defaultTieUp(shafts, pedals) {
+    const tieUp = Array.from(
+        { length: shafts },
+        () => Array(pedals).fill(false)
+    );
+
+    if (shafts === 4 && pedals === 6) {
+        const pairs = [
+            [1, 2], // Pédale 1
+            [2, 3], // Pédale 2
+            [3, 4], // Pédale 3
+            [4, 1], // Pédale 4
+            [2, 4], // Pédale 5
+            [1, 3]  // Pédale 6
+        ];
+
+        pairs.forEach((frames, pedal) => {
+            frames.forEach(frame => {
+                tieUp[frame - 1][pedal] = true;
+            });
+        });
+    }
+
+    return tieUp;
+}
+
+
 function freshDraft() {
     return {
         version: 2,
@@ -31,11 +60,7 @@ function freshDraft() {
         threading: Array.from({
             length: 16
         }, (_, i) => i % 4),
-        tieUp: Array.from({
-            length: 4
-        }, (_, s) => Array.from({
-                length: 6
-            }, (_, p) => p === s % 2)),
+        tieUp: defaultTieUp(4, 6),
         treadling: Array.from({
             length: 8
         }, (_, i) => Array.from({
