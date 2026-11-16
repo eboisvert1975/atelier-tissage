@@ -199,7 +199,7 @@ function renderDrawdown() {
             ctx.fillStyle =
                 palette[colorIndex]?.hex || '#E9DFC9';
 
-            const x = end * cellSize;
+            const x = (ends - 1 - end) * cellSize;
             const y = pick * cellSize;
 
             ctx.fillRect(
@@ -250,7 +250,7 @@ function renderThreading() {
             changed()
         });
         row.append(label, select);
-        box.append(row)
+        box.prepend(row)
     })
 }
 function renderMatrix(targetId, matrix, rowLabel, columnPrefix, onToggle) {
@@ -310,7 +310,7 @@ function renderColors(targetId, items, prefix, onChange) {
         chip.className = 'color-chip';
         chip.style.background = palette[color].hex;
         row.append(label, select, chip);
-        box.append(row)
+        box.prepend(row)
     })
 }
 function render() {
@@ -635,9 +635,9 @@ function renderOverview() {
     );
 
     const endLabels = Array.from(
-        { length: ends },
-        (_, i) => i + 1
-    );
+    { length: ends },
+    (_, i) => ends - i
+);
 
     const pedalLabels = Array.from(
         { length: draft.pedals },
@@ -655,18 +655,21 @@ function renderOverview() {
         board,
         draft.shafts,
         ends,
-        (r, c) => {
-            const shaft = draft.shafts - 1 - r;
+        
+    (r, c) => {
+        const shaft = draft.shafts - 1 - r;
+        const end = ends - 1 - c;
 
-            return ovButton(
-                draft.threading[c] === shaft,
-                `Fil ${c + 1}, cadre ${shaft + 1}`,
-                () => {
-                    draft.threading[c] = shaft;
-                    changed('Passage modifié.');
-                }
-            );
-        },
+        return ovButton(
+            draft.threading[end] === shaft,
+            `Fil ${end + 1}, cadre ${shaft + 1}`,
+            () => {
+                draft.threading[end] = shaft;
+                changed('Passage modifié.');
+            }
+        );
+    },
+
         'Passage en lisses (cadres × fils)',
         shaftLabels,
         endLabels
@@ -701,29 +704,33 @@ function renderOverview() {
         board,
         picks,
         ends,
+        
         (r, c) => {
+            const end = ends - 1 - c;
+
             const cell = document.createElement('div');
             cell.className = 'ov-cell';
 
             const above = warpUp(
-                draft.threading[c],
+                draft.threading[end],
                 r
             );
 
             cell.style.background =
                 palette[
                     above
-                        ? draft.warpColors[c]
+                        ? draft.warpColors[end]
                         : draft.weftColors[r]
                 ].hex;
 
             cell.title =
-                `Duite ${r + 1}, fil ${c + 1} : ` +
+                `Duite ${r + 1}, fil ${end + 1} : ` +
                 (above ? 'chaîne' : 'trame') +
                 ' visible';
 
             return cell;
         },
+
         'Dessin du tissu (duites × fils)',
         pickLabels,
         endLabels
@@ -824,6 +831,10 @@ function renderRealisticPreview(board) {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    // Afficher le fil 1 à droite.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
 
     // Forme d'un fil légèrement arrondi.
     
@@ -1927,7 +1938,9 @@ function exportWeavingExcel() {
     const threadingRows = [
       [
         'Cadre / Fil',
-        ...draft.threading.map((_, i) => i + 1)
+        ...draft.threading.map(
+        (_, i) => draft.threading.length - i
+)
       ]
     ];
 
@@ -1939,7 +1952,7 @@ function exportWeavingExcel() {
     ) {
       const row = ['Cadre ' + (shaft + 1)];
 
-      draft.threading.forEach(threadedShaft => {
+      [...draft.threading].reverse().forEach(threadedShaft => {
         row.push(
           threadedShaft === shaft ? '■' : ''
         );
@@ -2051,7 +2064,8 @@ function exportWeavingExcel() {
       [
         'Duite / Fil',
         ...draft.threading.map(
-          (_, i) => i + 1
+          (_, i) => draft.threading.length - i
+)
         )
       ]
     ];
@@ -2068,7 +2082,8 @@ function exportWeavingExcel() {
 
       const row = [pick + 1];
 
-      draft.threading.forEach((shaft, end) => {
+      for (let end = draft.threading.length - 1; end >= 0; end--) {
+          const shaft = draft.threading[end];
         const connected = connectedShafts[shaft];
 
         const warpVisible =
@@ -2089,7 +2104,7 @@ function exportWeavingExcel() {
         ).hex;
 
         row.push(face + ' ' + hex);
-      });
+      }
 
       drawdownRows.push(row);
     });
