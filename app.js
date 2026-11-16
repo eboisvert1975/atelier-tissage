@@ -66,10 +66,8 @@ function freshDraft() {
         }, (_, i) => Array.from({
                 length: 6
             }, (_, p) => p === i % 2)),
-        warpColors: Array.from({
-            length: 16
-        }, (_, i) => i % 4 + 1),
-        weftColors: Array(8).fill(0)
+        warpColors: Array(16).fill(0),
+        weftColors: Array(8).fill(5)
     }
 }
 let draft = freshDraft();
