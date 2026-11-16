@@ -533,6 +533,85 @@ function ovButton(active, label, callback) {
     return b;
 }
 
+
+function generateTreadlingAsThreaded() {
+    const threading = draft.threading;
+    const ends = threading.length;
+
+    if (ends < 2) {
+        alert('Il faut au moins deux fils de chaîne.');
+        return;
+    }
+
+    // Trouver la pédale qui commande exactement
+    // les deux cadres demandés.
+    function findPedal(shaftA, shaftB) {
+        for (let p = 0; p < draft.pedals; p++) {
+            const attached = [];
+
+            for (let s = 0; s < draft.shafts; s++) {
+                if (draft.tieUp[s][p]) {
+                    attached.push(s);
+                }
+            }
+
+            if (
+                attached.length === 2 &&
+                attached.includes(shaftA) &&
+                attached.includes(shaftB)
+            ) {
+                return p;
+            }
+        }
+
+        return -1;
+    }
+
+    const newTreadling = [];
+
+    for (let i = 0; i < ends; i++) {
+        const first = threading[i];
+        const second = threading[(i + 1) % ends];
+
+        const pedal = findPedal(first, second);
+
+        if (pedal === -1) {
+            alert(
+                'Impossible de trouver une pédale pour ' +
+                'les cadres ' + (first + 1) +
+                ' et ' + (second + 1) +
+                '. Vérifie ton attachage.'
+            );
+            return;
+        }
+
+        const row = Array(draft.pedals).fill(false);
+        row[pedal] = true;
+        newTreadling.push(row);
+    }
+
+    if (!confirm(
+        'Remplacer la marchure actuelle par une ' +
+        'marchure telle qu’enfilée (' +
+        newTreadling.length + ' duites)?'
+    )) {
+        return;
+    }
+
+    draft.treadling = newTreadling;
+
+    // Ajuster les couleurs de trame au nouveau
+    // nombre de duites.
+    const oldColors = draft.weftColors || [];
+    draft.weftColors = Array.from(
+        { length: newTreadling.length },
+        (_, i) => oldColors[i] ?? 5
+    );
+
+    changed('Marchure telle qu’enfilée générée.');
+}
+
+
 function renderOverview() {
     const board = $('overviewBoard');
     if (!board) return;
@@ -1088,6 +1167,30 @@ $('zoomControl').addEventListener('input', e => {
     overviewCellSize = Number(e.target.value);
     renderOverview()
 });
+
+
+    // Bouton Marchure telle qu'enfilée
+    const treadlingEditor = $('treadlingEditor');
+
+    if (treadlingEditor) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Marchure telle qu’enfilée';
+        button.className = 'secondary';
+        button.style.marginBottom = '12px';
+
+        button.addEventListener(
+            'click',
+            generateTreadlingAsThreaded
+        );
+
+        treadlingEditor.parentElement.insertBefore(
+            button,
+            treadlingEditor
+        );
+    }
+
+
 const originalRender = render;
 render = function () {
     originalRender();
