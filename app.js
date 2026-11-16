@@ -2065,7 +2065,6 @@ function exportWeavingExcel() {
         'Duite / Fil',
         ...draft.threading.map(
           (_, i) => draft.threading.length - i
-)
         )
       ]
     ];
